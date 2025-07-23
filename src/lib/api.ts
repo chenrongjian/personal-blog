@@ -342,6 +342,103 @@ export const categoriesApi = {
   }
 }
 
+// 网站配置相关API
+export const configApi = {
+  // 获取网站配置
+  async getSiteConfig() {
+    const { data, error } = await supabase
+      .from('site_config')
+      .select('config_value')
+      .eq('config_key', 'site_settings')
+      .single()
+    
+    if (error) {
+      console.warn('Failed to fetch site config from database, using default')
+      // 如果数据库中没有配置，返回默认配置
+      return null
+    }
+    
+    return data.config_value
+  },
+
+  // 保存网站配置（管理员）
+  async saveSiteConfig(config: Record<string, unknown>) {
+    // 检查用户是否为管理员
+    const isAdmin = await authApi.isAdmin()
+    if (!isAdmin) {
+      throw new Error('Only administrators can modify site configuration')
+    }
+
+    const user = await authApi.getCurrentUser()
+    if (!user) throw new Error('User not authenticated')
+
+    // 通过邮箱在 users 表中查找用户 ID
+    const { data: dbUser, error: userError } = await supabaseAdmin
+      .from('users')
+      .select('id')
+      .eq('email', user.email)
+      .single()
+    
+    if (userError || !dbUser) {
+      throw new Error('User not found in users table')
+    }
+
+    // 先尝试更新现有配置
+    const { data: updateData, error: updateError } = await supabaseAdmin
+      .from('site_config')
+      .update({
+        config_value: config,
+        updated_at: new Date().toISOString()
+      })
+      .eq('config_key', 'site_settings')
+      .select()
+      .single()
+    
+    // 如果更新成功，返回更新后的数据
+    if (!updateError && updateData) {
+      return updateData
+    }
+    
+    // 如果记录不存在，则插入新记录
+    if (updateError && updateError.code === 'PGRST116') {
+      const { data: insertData, error: insertError } = await supabaseAdmin
+        .from('site_config')
+        .insert({
+          config_key: 'site_settings',
+          config_value: config,
+          created_by: dbUser.id,
+          description: '网站基本配置信息'
+        })
+        .select()
+        .single()
+      
+      if (insertError) throw insertError
+      return insertData
+    }
+    
+    // 其他错误直接抛出
+    throw updateError
+  },
+
+  // 重置为默认配置（管理员）
+  async resetSiteConfig() {
+    // 检查用户是否为管理员
+    const isAdmin = await authApi.isAdmin()
+    if (!isAdmin) {
+      throw new Error('Only administrators can reset site configuration')
+    }
+
+    // 删除现有配置，让系统使用默认配置
+    const { error } = await supabaseAdmin
+      .from('site_config')
+      .delete()
+      .eq('config_key', 'site_settings')
+    
+    if (error) throw error
+    return null
+  }
+}
+
 // 数据迁移工具
 export const migrationApi = {
   // 从LocalStorage迁移数据到Supabase

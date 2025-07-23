@@ -8,7 +8,7 @@ if (!supabaseUrl || !supabaseAnonKey) {
   throw new Error('Missing Supabase environment variables');
 }
 
-// 公开访问的客户端（用于读取已发布内容）
+// 公开访问的客户端（用于读取已发布内容和认证操作）
 export const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
 // 管理员客户端（用于管理操作，绕过RLS）
@@ -19,5 +19,5 @@ export const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey || sup
   }
 });
 
-// 认证专用客户端（用于登录、登出等认证操作）
-export const supabaseAuth = createClient(supabaseUrl, supabaseAnonKey);
+// 认证客户端使用同一个实例，避免多个 GoTrueClient
+export const supabaseAuth = supabase;

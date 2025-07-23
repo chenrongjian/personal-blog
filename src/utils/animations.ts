@@ -1,4 +1,3 @@
-// @ts-ignore
 import { animate, stagger, createTimeline } from 'animejs';
 
 // 页面加载动画
@@ -130,6 +129,82 @@ export const typewriterAnimation = (element: HTMLElement, text: string, speed = 
   return timer;
 };
 
+// 循环打字机效果
+export const loopingTypewriterAnimation = (element: HTMLElement, text: string, speed = 50, loopInterval = 3000) => {
+  console.log('🎬 loopingTypewriterAnimation 被调用:', {
+    element,
+    text,
+    speed,
+    loopInterval,
+    elementTagName: element?.tagName,
+    elementClassName: element?.className
+  });
+  
+  if (!element || !text) {
+    console.warn('❌ 打字机动画：元素或文本为空', { element, text });
+    return () => {};
+  }
+  
+  let currentTimer: NodeJS.Timeout | null = null;
+  let loopTimer: NodeJS.Timeout | null = null;
+  let pauseTimer: NodeJS.Timeout | null = null;
+  
+  const typeText = () => {
+    console.log('⌨️ 开始打字动画，文本:', text);
+    element.textContent = '';
+    let i = 0;
+    
+    currentTimer = setInterval(() => {
+      if (i < text.length) {
+        const char = text.charAt(i);
+        element.textContent += char;
+        console.log(`📝 添加字符 [${i}]: "${char}", 当前内容: "${element.textContent}"`);
+        i++;
+      } else {
+        console.log('✅ 打字完成，当前内容:', element.textContent);
+        if (currentTimer) {
+          clearInterval(currentTimer);
+          currentTimer = null;
+        }
+        // 完成打字后暂停一段时间再开始下一轮
+        pauseTimer = setTimeout(() => {
+          console.log('🔄 准备开始下一轮打字');
+          // 添加淡出效果
+          element.style.opacity = '0.7';
+          setTimeout(() => {
+            element.style.opacity = '1';
+          }, 200);
+        }, 1500);
+      }
+    }, speed);
+  };
+  
+  // 立即执行第一次
+  console.log('🚀 立即执行第一次打字动画');
+  typeText();
+  
+  // 设置循环定时器
+  console.log('⏰ 设置循环定时器，间隔:', loopInterval);
+  loopTimer = setInterval(() => {
+    console.log('🔄 循环定时器触发，开始新一轮打字');
+    typeText();
+  }, loopInterval);
+  
+  // 返回清理函数
+  return () => {
+    console.log('🧹 清理打字机动画');
+    if (currentTimer) {
+      clearInterval(currentTimer);
+    }
+    if (loopTimer) {
+      clearInterval(loopTimer);
+    }
+    if (pauseTimer) {
+      clearTimeout(pauseTimer);
+    }
+  };
+};
+
 // 视差滚动动画
 export const parallaxAnimation = (element: HTMLElement, speed = 0.5) => {
   const handleScroll = () => {
@@ -145,6 +220,111 @@ export const parallaxAnimation = (element: HTMLElement, speed = 0.5) => {
   };
 };
 
+// 滚动触发动画
+export const scrollTriggerAnimation = (selector: string, options = {}) => {
+  const defaultOptions = {
+    threshold: 0.1,
+    rootMargin: '0px 0px -50px 0px'
+  };
+  
+  const finalOptions = { ...defaultOptions, ...options };
+  
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        animate(entry.target, {
+          translateY: [50, 0],
+          opacity: [0, 1],
+          duration: 800,
+          easing: 'cubicBezier(0.25, 0.46, 0.45, 0.94)'
+        });
+        observer.unobserve(entry.target);
+      }
+    });
+  }, finalOptions);
+  
+  const elements = document.querySelectorAll(selector);
+  elements.forEach(el => observer.observe(el));
+  
+  return observer;
+};
+
+// 磁性悬停效果
+export const magneticHoverAnimation = (element: HTMLElement, strength = 0.3) => {
+  const handleMouseMove = (e: MouseEvent) => {
+    const rect = element.getBoundingClientRect();
+    const x = e.clientX - rect.left - rect.width / 2;
+    const y = e.clientY - rect.top - rect.height / 2;
+    
+    animate(element, {
+      translateX: x * strength,
+      translateY: y * strength,
+      duration: 300,
+      easing: 'cubicBezier(0.25, 0.46, 0.45, 0.94)'
+    });
+  };
+  
+  const handleMouseLeave = () => {
+    animate(element, {
+      translateX: 0,
+      translateY: 0,
+      duration: 500,
+      easing: 'spring(1, 80, 10, 0)'
+    });
+  };
+  
+  element.addEventListener('mousemove', handleMouseMove);
+  element.addEventListener('mouseleave', handleMouseLeave);
+  
+  return () => {
+    element.removeEventListener('mousemove', handleMouseMove);
+    element.removeEventListener('mouseleave', handleMouseLeave);
+  };
+};
+
+// 粒子浮动动画
+export const particleFloatAnimation = (selector: string) => {
+  const elements = document.querySelectorAll(selector);
+  
+  elements.forEach((element, index) => {
+    const delay = index * 200;
+    const duration = 3000 + Math.random() * 2000;
+    
+    animate(element, {
+      translateY: [-20, 20],
+      translateX: [-10, 10],
+      duration: duration,
+      delay: delay,
+      easing: 'easeInOutSine',
+      loop: true,
+      direction: 'alternate'
+    });
+  });
+};
+
+// 文字闪烁光标效果
+export const blinkingCursorAnimation = (element: HTMLElement) => {
+  const cursor = document.createElement('span');
+  cursor.textContent = '|';
+  cursor.style.animation = 'blink 1s infinite';
+  element.appendChild(cursor);
+  
+  // 添加CSS动画
+  if (!document.querySelector('#blink-keyframes')) {
+    const style = document.createElement('style');
+    style.id = 'blink-keyframes';
+    style.textContent = `
+      @keyframes blink {
+        0%, 50% { opacity: 1; }
+        51%, 100% { opacity: 0; }
+      }
+    `;
+    document.head.appendChild(style);
+  }
+  
+  return cursor;
+};
+
 // 交错动画
 export const staggerAnimation = (selector: string, delay = 100) => {
   return animate(selector, {
@@ -157,7 +337,7 @@ export const staggerAnimation = (selector: string, delay = 100) => {
 };
 
 // 路径动画
-export const pathAnimation = (selector: string, path: string) => {
+export const pathAnimation = (selector: string) => {
   // 简化路径动画，animejs 4.0 API有变化
   return animate(selector, {
     translateX: [0, 100],
@@ -274,6 +454,7 @@ export default {
   rotateAnimation,
   pulseAnimation,
   typewriterAnimation,
+  loopingTypewriterAnimation,
   parallaxAnimation,
   staggerAnimation,
   pathAnimation,
@@ -283,5 +464,9 @@ export default {
   modalAnimation,
   navScrollAnimation,
   highlightAnimation,
-  backToTopAnimation
+  backToTopAnimation,
+  scrollTriggerAnimation,
+  magneticHoverAnimation,
+  particleFloatAnimation,
+  blinkingCursorAnimation
 };

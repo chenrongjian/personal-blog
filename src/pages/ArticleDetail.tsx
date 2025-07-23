@@ -4,12 +4,12 @@ import { ChevronUp } from 'lucide-react';
 import Navigation from '@/components/Navigation';
 import useStore from '@/store/useStore';
 import MarkdownRenderer from '@/components/MarkdownRenderer';
-import type { Article } from '@/lib/api';
+import type { Article, Category } from '@/lib/api';
 import '@/styles/markdown.css';
 
 export default function ArticleDetail() {
   const { id } = useParams<{ id: string }>();
-  const { fetchArticleById, incrementViewCount, articles, categories, loading } = useStore();
+  const { fetchArticleById, incrementViewCount, articles, categories } = useStore();
   const [isLoaded, setIsLoaded] = useState(false);
   const [articleLoading, setArticleLoading] = useState(true);
   
@@ -79,7 +79,7 @@ export default function ArticleDetail() {
               </Link>
               <i className="fas fa-chevron-right mx-3"></i>
               <Link 
-                to={`/categories/${(category as any)?.id || ''}`} 
+                to={`/categories/${(category as Category)?.id || ''}`} 
                 className="hover:text-blue-600 transition-colors"
               >
                 {category?.name}

@@ -30,7 +30,7 @@ export default function AdminLogin() {
     try {
       await login(email, password);
       // 登录成功会通过Navigate组件自动跳转
-    } catch (error) {
+    } catch {
       // 错误已经在store中处理
     }
   };

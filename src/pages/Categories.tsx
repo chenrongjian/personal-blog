@@ -2,11 +2,10 @@ import { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import Navigation from '@/components/Navigation';
 import useStore from '@/store/useStore';
-import { Article, Category } from '@/lib/api';
 
 export default function Categories() {
   const { categoryId } = useParams<{ categoryId?: string }>();
-  const { articles, categories, getArticlesByCategory, fetchArticles, fetchCategories, loading } = useStore();
+  const { articles, categories, getArticlesByCategory, fetchArticles, fetchCategories } = useStore();
   const [isLoaded, setIsLoaded] = useState(false);
   const [sortBy, setSortBy] = useState<'date' | 'title'>('date');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');

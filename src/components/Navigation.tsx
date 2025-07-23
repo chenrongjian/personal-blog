@@ -2,12 +2,14 @@ import { Link, useLocation } from 'react-router-dom';
 import { useState, useEffect, useRef } from 'react';
 import useStore from '@/store/useStore';
 import { navScrollAnimation } from '@/utils/animations';
+import { useConfig } from '@/contexts/ConfigContext';
 
 export default function Navigation() {
   const location = useLocation();
   const { isAuthenticated, logout } = useStore();
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const { config: siteConfig } = useConfig();
   const navRef = useRef<HTMLElement>(null);
 
   useEffect(() => {
@@ -55,9 +57,9 @@ export default function Navigation() {
             className="text-2xl font-bold text-gray-800 hover:text-blue-600 transition-colors"
             style={{ fontFamily: 'Playfair Display, serif' }}
           >
-            个人博客
+            {siteConfig.site.title}
             <span className="text-sm font-normal text-gray-500 ml-2" style={{ fontFamily: 'Source Sans Pro, sans-serif' }}>
-              Personal Blog
+              {siteConfig.site.titleEn}
             </span>
           </Link>
 
@@ -70,7 +72,7 @@ export default function Navigation() {
               }`}
             >
               <i className="fas fa-home mr-2"></i>
-              首页
+              {siteConfig.navigation.home}
             </Link>
             
             <Link
@@ -80,7 +82,7 @@ export default function Navigation() {
               }`}
             >
               <i className="fas fa-folder mr-2"></i>
-              分类
+              {siteConfig.navigation.categories}
             </Link>
 
             {isAuthenticated ? (
@@ -92,7 +94,7 @@ export default function Navigation() {
                   }`}
                 >
                   <i className="fas fa-cog mr-2"></i>
-                  管理
+                  {siteConfig.navigation.admin}
                 </Link>
                 
                 <button
@@ -100,7 +102,7 @@ export default function Navigation() {
                   className="text-sm font-medium text-gray-700 hover:text-red-600 transition-colors"
                 >
                   <i className="fas fa-sign-out-alt mr-2"></i>
-                  退出
+                  {siteConfig.navigation.logout}
                 </button>
               </div>
             ) : (
@@ -109,7 +111,7 @@ export default function Navigation() {
                 className="text-sm font-medium text-gray-700 hover:text-blue-600 transition-colors"
               >
                 <i className="fas fa-user mr-2"></i>
-                登录
+                {siteConfig.navigation.login}
               </Link>
             )}
           </div>
@@ -133,7 +135,7 @@ export default function Navigation() {
                 className={`text-sm font-medium transition-colors hover:text-blue-600 ${isActive('/') ? 'text-blue-600' : 'text-gray-700'}`}
               >
                 <i className="fas fa-home mr-2"></i>
-                首页
+                {siteConfig.navigation.home}
               </Link>
               
               <Link
@@ -142,7 +144,7 @@ export default function Navigation() {
                 className={`text-sm font-medium transition-colors hover:text-blue-600 ${isActive('/categories') ? 'text-blue-600' : 'text-gray-700'}`}
               >
                 <i className="fas fa-folder mr-2"></i>
-                分类
+                {siteConfig.navigation.categories}
               </Link>
 
               {isAuthenticated ? (
@@ -153,7 +155,7 @@ export default function Navigation() {
                     className={`text-sm font-medium transition-colors hover:text-blue-600 ${location.pathname.startsWith('/admin') ? 'text-blue-600' : 'text-gray-700'}`}
                   >
                     <i className="fas fa-cog mr-2"></i>
-                    管理
+                    {siteConfig.navigation.admin}
                   </Link>
                   
                   <button
@@ -161,7 +163,7 @@ export default function Navigation() {
                     className="text-left text-sm font-medium text-gray-700 hover:text-red-600 transition-colors"
                   >
                     <i className="fas fa-sign-out-alt mr-2"></i>
-                    退出
+                    {siteConfig.navigation.logout}
                   </button>
                 </>
               ) : (
@@ -171,7 +173,7 @@ export default function Navigation() {
                   className="text-sm font-medium text-gray-700 hover:text-blue-600 transition-colors"
                 >
                   <i className="fas fa-user mr-2"></i>
-                  登录
+                  {siteConfig.navigation.login}
                 </Link>
               )}
             </div>

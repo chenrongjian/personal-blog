@@ -5,9 +5,13 @@ import useStore from '@/store/useStore';
 import type { Category } from '@/lib/api';
 
 export default function CategoryManagement() {
-  const { categories, articles, addCategory, updateCategory, deleteCategory, fetchCategories, fetchArticles, loading } = useStore();
+  const { categories, articles, addCategory, updateCategory, deleteCategory, fetchCategories, fetchArticles } = useStore();
   const [isLoaded, setIsLoaded] = useState(false);
   const [showModal, setShowModal] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [showWarningModal, setShowWarningModal] = useState(false);
+  const [deletingCategoryId, setDeletingCategoryId] = useState<string | null>(null);
+  const [warningMessage, setWarningMessage] = useState('');
   const [editingCategory, setEditingCategory] = useState<Category | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   
@@ -67,21 +71,39 @@ export default function CategoryManagement() {
     setShowModal(true);
   };
   
-  const handleDelete = async (id: string) => {
+  const handleDelete = (id: string) => {
     const articleCount = getArticleCount(id);
     
     if (articleCount > 0) {
-      alert(`无法删除该分类，因为还有 ${articleCount} 篇文章属于此分类。请先移动或删除这些文章。`);
+      setWarningMessage(`无法删除该分类，因为还有 ${articleCount} 篇文章属于此分类。请先移动或删除这些文章。`);
+      setShowWarningModal(true);
       return;
     }
     
-    if (window.confirm('确定要删除这个分类吗？')) {
+    setDeletingCategoryId(id);
+    setShowDeleteModal(true);
+  };
+
+  const confirmDelete = async () => {
+    if (deletingCategoryId) {
       try {
-        await deleteCategory(id);
+        await deleteCategory(deletingCategoryId);
+        setShowDeleteModal(false);
+        setDeletingCategoryId(null);
       } catch (error) {
         console.error('删除失败:', error);
       }
     }
+  };
+
+  const cancelDelete = () => {
+    setShowDeleteModal(false);
+    setDeletingCategoryId(null);
+  };
+
+  const closeWarning = () => {
+    setShowWarningModal(false);
+    setWarningMessage('');
   };
   
 
@@ -114,6 +136,14 @@ export default function CategoryManagement() {
                 >
                   <i className="fas fa-file-alt mr-2"></i>
                   文章管理
+                </Link>
+                
+                <Link
+                  to="/admin/config"
+                  className="inline-flex items-center px-4 py-2 text-gray-600 hover:text-blue-600 transition-colors"
+                >
+                  <i className="fas fa-cog mr-2"></i>
+                  配置管理
                 </Link>
                 
                 <button
@@ -317,6 +347,77 @@ export default function CategoryManagement() {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+      
+      {/* Delete Confirmation Modal */}
+      {showDeleteModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-xl max-w-md w-full">
+            <div className="p-6">
+              <div className="flex items-center mb-4">
+                <div className="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center mr-4">
+                  <i className="fas fa-exclamation-triangle text-red-600 text-xl"></i>
+                </div>
+                <div>
+                  <h3 className="text-lg font-semibold text-gray-800">确认删除</h3>
+                  <p className="text-gray-600 text-sm">此操作无法撤销</p>
+                </div>
+              </div>
+              
+              <p className="text-gray-700 mb-6">
+                确定要删除这个分类吗？
+              </p>
+              
+              <div className="flex items-center justify-end gap-4">
+                <button
+                  onClick={cancelDelete}
+                  className="px-4 py-2 text-gray-600 hover:text-gray-800 transition-colors"
+                >
+                  取消
+                </button>
+                
+                <button
+                  onClick={confirmDelete}
+                  className="px-6 py-2 bg-red-600 text-white font-medium rounded-lg hover:bg-red-700 transition-colors"
+                >
+                  确认删除
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+      
+      {/* Warning Modal */}
+      {showWarningModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-xl max-w-md w-full">
+            <div className="p-6">
+              <div className="flex items-center mb-4">
+                <div className="w-12 h-12 bg-yellow-100 rounded-full flex items-center justify-center mr-4">
+                  <i className="fas fa-exclamation-triangle text-yellow-600 text-xl"></i>
+                </div>
+                <div>
+                  <h3 className="text-lg font-semibold text-gray-800">无法删除</h3>
+                  <p className="text-gray-600 text-sm">该分类正在使用中</p>
+                </div>
+              </div>
+              
+              <p className="text-gray-700 mb-6">
+                {warningMessage}
+              </p>
+              
+              <div className="flex items-center justify-end">
+                <button
+                  onClick={closeWarning}
+                  className="px-6 py-2 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition-colors"
+                >
+                  我知道了
+                </button>
+              </div>
+            </div>
           </div>
         </div>
       )}

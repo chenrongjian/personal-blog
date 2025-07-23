@@ -5,9 +5,11 @@ import useStore from '@/store/useStore';
 import type { Article } from '@/lib/api';
 
 export default function ArticleManagement() {
-  const { articles, categories, addArticle, updateArticle, deleteArticle, fetchArticles, fetchCategories, loading } = useStore();
+  const { articles, categories, addArticle, updateArticle, deleteArticle, fetchArticles, fetchCategories } = useStore();
   const [isLoaded, setIsLoaded] = useState(false);
   const [showModal, setShowModal] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [deletingArticleId, setDeletingArticleId] = useState<string | null>(null);
   const [editingArticle, setEditingArticle] = useState<Article | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('');
@@ -83,14 +85,26 @@ export default function ArticleManagement() {
     setShowModal(true);
   };
   
-  const handleDelete = async (id: string) => {
-    if (window.confirm('确定要删除这篇文章吗？')) {
+  const handleDelete = (id: string) => {
+    setDeletingArticleId(id);
+    setShowDeleteModal(true);
+  };
+
+  const confirmDelete = async () => {
+    if (deletingArticleId) {
       try {
-        await deleteArticle(id);
+        await deleteArticle(deletingArticleId);
+        setShowDeleteModal(false);
+        setDeletingArticleId(null);
       } catch (error) {
         console.error('删除失败:', error);
       }
     }
+  };
+
+  const cancelDelete = () => {
+    setShowDeleteModal(false);
+    setDeletingArticleId(null);
   };
   
   const getCategoryName = (categoryId: string) => {
@@ -125,6 +139,14 @@ export default function ArticleManagement() {
                 >
                   <i className="fas fa-folder mr-2"></i>
                   分类管理
+                </Link>
+                
+                <Link
+                  to="/admin/config"
+                  className="inline-flex items-center px-4 py-2 text-gray-600 hover:text-blue-600 transition-colors"
+                >
+                  <i className="fas fa-cog mr-2"></i>
+                  配置管理
                 </Link>
                 
                 <button
@@ -409,6 +431,43 @@ export default function ArticleManagement() {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+      
+      {/* Delete Confirmation Modal */}
+      {showDeleteModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-xl max-w-md w-full">
+            <div className="p-6">
+              <div className="flex items-center justify-center w-12 h-12 bg-red-100 rounded-full mx-auto mb-4">
+                <i className="fas fa-exclamation-triangle text-red-600 text-xl"></i>
+              </div>
+              
+              <h3 className="text-lg font-bold text-gray-800 text-center mb-2">
+                确认删除
+              </h3>
+              
+              <p className="text-gray-600 text-center mb-6">
+                确定要删除这篇文章吗？此操作无法撤销。
+              </p>
+              
+              <div className="flex items-center justify-end gap-4">
+                <button
+                  onClick={cancelDelete}
+                  className="px-4 py-2 text-gray-600 hover:text-gray-800 transition-colors"
+                >
+                  取消
+                </button>
+                
+                <button
+                  onClick={confirmDelete}
+                  className="px-4 py-2 bg-red-600 text-white font-medium rounded-lg hover:bg-red-700 transition-colors"
+                >
+                  确认删除
+                </button>
+              </div>
+            </div>
           </div>
         </div>
       )}

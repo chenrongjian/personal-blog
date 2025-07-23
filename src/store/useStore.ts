@@ -284,7 +284,7 @@ const useStore = create<BlogState>()((set, get) => ({
       } else {
         set({ isAuthenticated: false, user: null });
       }
-    } catch (error) {
+    } catch {
       set({ isAuthenticated: false, user: null });
     }
   },
