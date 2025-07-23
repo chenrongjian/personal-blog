@@ -1,0 +1,188 @@
+/* Markdown Content Styles */
+.markdown-content {
+  @apply text-gray-700;
+}
+
+/* 标题样式 */
+.markdown-content h1 {
+  @apply text-3xl font-bold text-gray-800 mt-8 mb-6 pb-3 border-b border-gray-200;
+  font-family: 'Noto Serif SC', serif;
+  line-height: 1.3;
+}
+
+.markdown-content h2 {
+  @apply text-2xl font-bold text-gray-800 mt-8 mb-5 pb-2 border-b border-gray-100;
+  font-family: 'Noto Serif SC', serif;
+  line-height: 1.4;
+}
+
+.markdown-content h3 {
+  @apply text-xl font-semibold text-gray-800 mt-6 mb-4;
+  font-family: 'Noto Serif SC', serif;
+  line-height: 1.4;
+}
+
+.markdown-content h4 {
+  @apply text-lg font-semibold text-gray-800 mt-5 mb-3;
+  font-family: 'Noto Serif SC', serif;
+}
+
+.markdown-content h5 {
+  @apply text-base font-semibold text-gray-800 mt-4 mb-3;
+  font-family: 'Noto Serif SC', serif;
+}
+
+.markdown-content h6 {
+  @apply text-sm font-semibold text-gray-700 mt-4 mb-2;
+  font-family: 'Noto Serif SC', serif;
+}
+
+/* 段落样式 */
+.markdown-content p {
+  @apply mb-4 leading-relaxed;
+  text-align: justify;
+}
+
+/* 链接样式 */
+.markdown-content a {
+  @apply text-blue-600 hover:text-blue-800 underline decoration-1 underline-offset-2;
+  transition: all 0.2s ease;
+}
+
+.markdown-content a:hover {
+  @apply decoration-2;
+}
+
+/* 强调样式 */
+.markdown-content strong {
+  @apply font-semibold text-gray-800;
+}
+
+.markdown-content em {
+  @apply italic text-gray-700;
+}
+
+/* 列表样式 */
+.markdown-content ul {
+  @apply mb-4 pl-6;
+}
+
+.markdown-content ol {
+  @apply mb-4 pl-6;
+}
+
+.markdown-content li {
+  @apply mb-2 leading-relaxed;
+}
+
+.markdown-content ul li {
+  @apply relative;
+}
+
+.markdown-content ul li::before {
+  content: '•';
+  @apply absolute -left-4 text-gray-400 font-bold;
+}
+
+.markdown-content ol li {
+  @apply list-decimal;
+}
+
+/* 引用样式 */
+.markdown-content blockquote {
+  @apply border-l-4 border-blue-200 bg-blue-50 pl-6 pr-4 py-4 mb-6 italic;
+  border-radius: 0 8px 8px 0;
+}
+
+.markdown-content blockquote p {
+  @apply mb-2 text-gray-700;
+}
+
+.markdown-content blockquote p:last-child {
+  @apply mb-0;
+}
+
+/* 代码样式 */
+.markdown-content code {
+  @apply bg-gray-100 text-gray-800 px-2 py-1 rounded text-sm;
+  font-family: 'Fira Code', 'Monaco', 'Consolas', monospace;
+}
+
+.markdown-content pre {
+  @apply bg-gray-900 text-gray-100 p-6 rounded-lg mb-6 overflow-x-auto;
+  font-family: 'Fira Code', 'Monaco', 'Consolas', monospace;
+  line-height: 1.5;
+}
+
+.markdown-content pre code {
+  @apply bg-transparent text-inherit p-0;
+  font-size: 14px;
+}
+
+/* 表格样式 */
+.markdown-content table {
+  @apply w-full border-collapse mb-6 bg-white rounded-lg overflow-hidden shadow-sm;
+}
+
+.markdown-content th {
+  @apply bg-gray-50 text-gray-800 font-semibold p-3 text-left border-b border-gray-200;
+}
+
+.markdown-content td {
+  @apply p-3 border-b border-gray-100;
+}
+
+.markdown-content tr:hover {
+  @apply bg-gray-50;
+}
+
+/* 分割线样式 */
+.markdown-content hr {
+  @apply border-0 border-t border-gray-200 my-8;
+}
+
+/* 图片样式 */
+.markdown-content img {
+  @apply max-w-full h-auto rounded-lg shadow-sm mb-4;
+}
+
+/* 代码高亮覆盖样式 */
+.markdown-content .hljs {
+  background: #1f2937 !important;
+  color: #f9fafb !important;
+  padding: 1.5rem !important;
+  border-radius: 0.5rem !important;
+  font-size: 14px !important;
+  line-height: 1.5 !important;
+}
+
+/* 响应式调整 */
+@media (max-width: 768px) {
+  .markdown-content h1 {
+    @apply text-2xl;
+  }
+  
+  .markdown-content h2 {
+    @apply text-xl;
+  }
+  
+  .markdown-content h3 {
+    @apply text-lg;
+  }
+  
+  .markdown-content pre {
+    @apply p-4;
+  }
+  
+  .markdown-content .hljs {
+    padding: 1rem !important;
+    font-size: 13px !important;
+  }
+}
+
+/* 首字母大写效果（可选） */
+.markdown-content .first-letter::first-letter {
+  @apply float-left text-6xl font-bold text-gray-800 mr-2 mt-1;
+  font-family: 'Noto Serif SC', serif;
+  line-height: 0.8;
+}
