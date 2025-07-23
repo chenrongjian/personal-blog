@@ -5,10 +5,12 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "tsc -b && vite build",
+    "build": "npm run generate:sitemap && tsc -b && vite build",
     "lint": "eslint .",
     "preview": "vite preview",
-    "check": "tsc -b --noEmit"
+    "check": "tsc -b --noEmit",
+    "generate:sitemap": "node scripts/generate-sitemap.js",
+    "seo:check": "npm run generate:sitemap && npm run check"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.52.0",

@@ -1,6 +1,8 @@
 import { useEffect, useState, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import Navigation from '@/components/Navigation';
+import SEOHead from '@/components/SEOHead';
+import SkeletonLoader from '@/components/SkeletonLoader';
 import useStore from '@/store/useStore';
 import { 
   pageLoadAnimation, 
@@ -24,16 +26,20 @@ export default function Home() {
   const particlesRef = useRef<HTMLDivElement>(null);
   const typewriterCleanupRef = useRef<(() => void) | null>(null);
 
-  // 初始化数据获取
+  // 优化数据获取 - 并行加载
   useEffect(() => {
     if (!configLoading) {
-      fetchArticles();
-      fetchCategories();
-      setIsLoaded(true);
+      // 并行加载数据以提升性能
+      Promise.all([
+        fetchArticles(),
+        fetchCategories()
+      ]).finally(() => {
+        setIsLoaded(true);
+      });
     }
   }, [configLoading, fetchArticles, fetchCategories]);
 
-  // 初始化打字机动画和页面动画（只在配置加载完成后执行一次）
+  // 优化动画初始化 - 延迟非关键动画
   useEffect(() => {
     if (configLoading || !siteConfig.site.typewriterText) {
       return;
@@ -49,13 +55,18 @@ export default function Home() {
     
     window.addEventListener('scroll', handleScroll);
     
-    // 页面加载动画 - 增加延迟确保DOM完全渲染
-    const initAnimations = setTimeout(() => {
+    // 立即执行关键动画
+    let retryTimeoutId: NodeJS.Timeout | null = null;
+    
+    const initCriticalAnimations = setTimeout(() => {
       if (heroRef.current) {
         pageLoadAnimation(heroRef.current, 0);
       }
       
       // 标题循环打字机效果 - 使用更可靠的元素查找方式
+      let retryCount = 0;
+      const maxRetries = 5;
+      
       const tryInitTypewriter = () => {
         const titleElement = document.querySelector('.typewriter-text') as HTMLElement;
         
@@ -65,16 +76,20 @@ export default function Home() {
             typewriterCleanupRef.current();
           }
           // 启动循环打字机效果，每4秒重复一次
-          typewriterCleanupRef.current = loopingTypewriterAnimation(titleElement, siteConfig.site.typewriterText, 100, 4000);
-        } else {
-          // 如果元素还没有渲染，1秒后重试
-          setTimeout(tryInitTypewriter, 1000);
+          typewriterCleanupRef.current = loopingTypewriterAnimation(titleElement, siteConfig.site.typewriterText, 80, 4000);
+        } else if (retryCount < maxRetries) {
+          // 如果元素还没有渲染，1秒后重试，但限制重试次数
+          retryCount++;
+          retryTimeoutId = setTimeout(tryInitTypewriter, 1000);
         }
       };
       
       // 立即尝试初始化，如果失败会自动重试
       tryInitTypewriter();
-      
+    }, 300); // 减少初始延迟
+    
+    // 延迟初始化非关键动画，减少初始加载压力
+    const initNonCriticalAnimations = setTimeout(() => {
       // 视差效果
       if (particlesRef.current) {
         parallaxAnimation(particlesRef.current, 0.3);
@@ -92,14 +107,20 @@ export default function Home() {
       magneticElements.forEach(el => {
         magneticHoverAnimation(el as HTMLElement, 0.2);
       });
-    }, 800); // 增加延迟时间确保DOM完全渲染
+    }, 1200); // 延迟1.2秒执行非关键动画
     
     return () => {
       window.removeEventListener('scroll', handleScroll);
-      clearTimeout(initAnimations);
+      clearTimeout(initCriticalAnimations);
+      clearTimeout(initNonCriticalAnimations);
+      // 清理重试定时器
+      if (retryTimeoutId) {
+        clearTimeout(retryTimeoutId);
+      }
       // 清理打字机动画
       if (typewriterCleanupRef.current) {
         typewriterCleanupRef.current();
+        typewriterCleanupRef.current = null;
       }
     };
   }, [configLoading, siteConfig.site.typewriterText]);
@@ -154,17 +175,51 @@ export default function Home() {
   // 显示加载状态
   if (loading.articles || loading.categories) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
-          <div className="w-12 h-12 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="text-gray-600">{siteConfig.site.loadingText}</p>
-        </div>
-      </div>
+      <main className="min-h-screen bg-gray-50 relative overflow-hidden">
+        <Navigation />
+        <SkeletonLoader type="page" />
+      </main>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 relative overflow-hidden">
+    <main className="min-h-screen bg-gray-50 relative overflow-hidden">
+      <SEOHead
+        title={`${siteConfig.site.title} - ${siteConfig.site.subtitle} | ${siteConfig.site.description}`}
+        description={siteConfig.site.description}
+        keywords="个人博客,技术博客,编程,前端开发,React,TypeScript,JavaScript,技术分享,学习笔记"
+        ogTitle={`${siteConfig.site.title} - ${siteConfig.site.subtitle}`}
+        ogDescription={siteConfig.site.description}
+        ogUrl="https://nobugcode.com/"
+        ogType="website"
+        canonicalUrl="https://nobugcode.com/"
+        structuredData={{
+          "@context": "https://schema.org",
+          "@type": "Blog",
+          "name": siteConfig.site.title,
+          "description": siteConfig.site.description,
+          "url": "https://nobugcode.com/",
+          "author": {
+            "@type": "Person",
+            "name": siteConfig.author.name
+          },
+          "publisher": {
+            "@type": "Person",
+            "name": siteConfig.author.name
+          },
+          "inLanguage": "zh-CN",
+          "blogPost": featuredArticles.map(article => ({
+            "@type": "BlogPosting",
+            "headline": article.title,
+            "url": `https://nobugcode.com/article/${article.id}`,
+            "datePublished": article.published_at,
+            "author": {
+              "@type": "Person",
+              "name": article.author
+            }
+          }))
+        }}
+      />
       {/* 滚动进度条 */}
       <div className="fixed top-0 left-0 w-full h-1 bg-gray-200 z-50">
         <div 
@@ -173,20 +228,20 @@ export default function Home() {
         />
       </div>
       
-      {/* 背景粒子动画 */}
+      {/* 优化后的背景粒子动画 - 减少数量提升性能 */}
       <div 
         ref={particlesRef}
         className="fixed inset-0 pointer-events-none z-0"
       >
-        {[...Array(20)].map((_, i) => (
+        {[...Array(8)].map((_, i) => (
            <div
              key={i}
-             className="particle absolute w-2 h-2 bg-blue-200 rounded-full opacity-20"
+             className="particle absolute w-2 h-2 bg-blue-200 rounded-full opacity-15"
              style={{
                left: `${Math.random() * 100}%`,
                top: `${Math.random() * 100}%`,
                background: `radial-gradient(circle, ${i % 2 === 0 ? '#3B82F6' : '#8B5CF6'}, transparent)`,
-               boxShadow: `0 0 ${4 + Math.random() * 6}px ${i % 2 === 0 ? '#3B82F6' : '#8B5CF6'}`
+               boxShadow: `0 0 ${3 + Math.random() * 4}px ${i % 2 === 0 ? '#3B82F6' : '#8B5CF6'}`
              }}
            />
          ))}
@@ -195,50 +250,64 @@ export default function Home() {
       <Navigation />
       
       {/* Hero Section */}
-      <section className="relative min-h-screen flex items-center justify-center overflow-hidden">
+      <header className="relative min-h-screen flex items-center justify-center overflow-hidden" role="banner">
         <div className="absolute inset-0 bg-gradient-to-br from-gray-50 to-gray-100"></div>
         
         <div 
           ref={heroRef}
           className="relative z-10 text-center px-6"
         >
-          <h1 
-            ref={titleRef}
-            className="text-4xl md:text-6xl font-bold text-gray-800 mb-8 leading-tight"
-            style={{ fontFamily: 'Noto Serif SC, serif', minHeight: '80px' }}
-          >
-            <div className="h-12 flex items-center justify-center">
-              <span className="typewriter-text"></span>
-            </div>
-          </h1>
+          {!isLoaded ? (
+            <SkeletonLoader type="hero" />
+          ) : (
+            <>
+              <h1 
+                ref={titleRef}
+                className="text-4xl md:text-6xl font-bold text-gray-800 mb-8 leading-tight"
+                style={{ fontFamily: 'Noto Serif SC, serif', minHeight: '80px' }}
+              >
+                <div className="h-12 flex items-center justify-center">
+                  <span className="typewriter-text"></span>
+                </div>
+              </h1>
           
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Link
-              to="/categories"
-              className="magnetic inline-flex items-center px-8 py-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white font-medium rounded-lg hover:from-blue-700 hover:to-purple-700 transition-all duration-300 transform hover:scale-105 hover:shadow-lg relative overflow-hidden group"
-            >
-              <div className="absolute inset-0 bg-gradient-to-r from-white/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 transform -skew-x-12 translate-x-[-100%] group-hover:translate-x-[100%]"></div>
-              <i className="fas fa-compass mr-2 relative z-10"></i>
-              <span className="relative z-10">{siteConfig.site.exploreButtonText}</span>
-            </Link>
-            
-            <button
-              onClick={() => {
-                const featuredSection = document.getElementById('featured');
-                if (featuredSection) {
-                  featuredSection.scrollIntoView({ 
-                    behavior: 'smooth',
-                    block: 'start'
-                  });
-                }
-              }}
-              className="magnetic inline-flex items-center px-8 py-3 border-2 border-gray-300 text-gray-700 font-medium rounded-lg hover:border-blue-600 hover:text-blue-600 transition-all duration-300 transform hover:scale-105 hover:shadow-md relative overflow-hidden group"
-            >
-              <div className="absolute inset-0 bg-gradient-to-r from-blue-50 to-purple-50 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-              <i className="fas fa-arrow-down mr-2 animate-bounce relative z-10"></i>
-              <span className="relative z-10">{siteConfig.site.continueReadingText}</span>
-            </button>
-          </div>
+              <div className="flex flex-col sm:flex-row gap-4 justify-center">
+                <button
+                  onClick={() => {
+                    const categoriesSection = document.querySelector('section[aria-labelledby="categories-title"]');
+                    if (categoriesSection) {
+                      categoriesSection.scrollIntoView({ 
+                        behavior: 'smooth',
+                        block: 'start'
+                      });
+                    }
+                  }}
+                  className="magnetic inline-flex items-center px-8 py-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white font-medium rounded-lg hover:from-blue-700 hover:to-purple-700 transition-all duration-300 transform hover:scale-105 hover:shadow-lg relative overflow-hidden group"
+                >
+                  <div className="absolute inset-0 bg-gradient-to-r from-white/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 transform -skew-x-12 translate-x-[-100%] group-hover:translate-x-[100%]"></div>
+                  <i className="fas fa-compass mr-2 relative z-10"></i>
+                  <span className="relative z-10">{siteConfig.site.exploreButtonText}</span>
+                </button>
+                
+                <button
+                  onClick={() => {
+                    const featuredSection = document.getElementById('featured');
+                    if (featuredSection) {
+                      featuredSection.scrollIntoView({ 
+                        behavior: 'smooth',
+                        block: 'start'
+                      });
+                    }
+                  }}
+                  className="magnetic inline-flex items-center px-8 py-3 border-2 border-gray-300 text-gray-700 font-medium rounded-lg hover:border-blue-600 hover:text-blue-600 transition-all duration-300 transform hover:scale-105 hover:shadow-md relative overflow-hidden group"
+                >
+                  <div className="absolute inset-0 bg-gradient-to-r from-blue-50 to-purple-50 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                  <i className="fas fa-arrow-down mr-2 animate-bounce relative z-10"></i>
+                  <span className="relative z-10">{siteConfig.site.continueReadingText}</span>
+                </button>
+              </div>
+            </>
+          )}
         </div>
         
         {/* Scroll Indicator */}
@@ -250,13 +319,14 @@ export default function Home() {
             <span className="text-xs text-gray-400 animate-pulse">{siteConfig.site.scrollIndicatorText}</span>
           </div>
         </div>
-      </section>
+      </header>
 
       {/* Featured Articles Section */}
-      <section id="featured" className="py-20 px-6">
+      <section id="featured" className="py-20 px-6" aria-labelledby="featured-title">
         <div className="max-w-6xl mx-auto">
           <div className="text-center mb-16 scroll-trigger">
             <h2 
+              id="featured-title"
               className="text-4xl md:text-5xl font-bold text-gray-800 mb-4"
               style={{ fontFamily: 'Noto Serif SC, serif' }}
             >
@@ -272,71 +342,79 @@ export default function Home() {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {featuredArticles.map((article, index) => (
-              <article 
-                key={article.id}
-                className="article-card bg-white rounded-xl shadow-sm hover:shadow-xl transition-all duration-500 transform hover:-translate-y-3 hover:rotate-1 group cursor-pointer"
-                style={{ 
-                  transitionDelay: `${index * 100}ms` 
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.transform = 'translateY(-12px) rotate(1deg) scale(1.02)';
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.transform = 'translateY(0) rotate(0deg) scale(1)';
-                }}
-              >
-                <div className="p-6 relative overflow-hidden">
-                  {/* 悬停时的背景光效 */}
-                  <div className="absolute inset-0 bg-gradient-to-r from-blue-50 to-purple-50 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
-                  <div className="relative z-10">
-                  <div className="flex items-center justify-between mb-4">
-                    <span className="inline-block px-3 py-1 bg-blue-100 text-blue-600 text-sm font-medium rounded-full">
-                      {article.categories?.name || getCategoryName(article.category_id)}
-                    </span>
-                    <span className="text-sm text-gray-500">
-                      <i className="fas fa-clock mr-1"></i>
-                      {article.read_time} 分钟
-                    </span>
-                  </div>
-                  
-                  <h3 
-                    className="text-xl font-bold text-gray-800 mb-3 line-clamp-2 hover:text-blue-600 transition-colors"
-                    style={{ fontFamily: 'Noto Serif SC, serif' }}
-                  >
-                    <Link to={`/article/${article.id}`}>
-                      {article.title}
-                    </Link>
-                  </h3>
-                  
-                  <p className="text-gray-600 mb-4 line-clamp-3">
-                    {article.excerpt}
-                  </p>
-                  
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center text-sm text-gray-500">
-                      <i className="fas fa-calendar mr-2"></i>
-                      {new Date(article.published_at).toLocaleDateString('zh-CN')}
+            {!isLoaded ? (
+              <SkeletonLoader type="article" count={6} />
+            ) : featuredArticles.length > 0 ? (
+              featuredArticles.map((article, index) => (
+                <article 
+                  key={article.id}
+                  className="article-card bg-white rounded-xl shadow-sm hover:shadow-xl transition-all duration-500 transform hover:-translate-y-3 hover:rotate-1 group cursor-pointer"
+                  style={{ 
+                    transitionDelay: `${index * 100}ms` 
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.transform = 'translateY(-12px) rotate(1deg) scale(1.02)';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.transform = 'translateY(0) rotate(0deg) scale(1)';
+                  }}
+                >
+                  <div className="p-6 relative overflow-hidden">
+                    {/* 悬停时的背景光效 */}
+                    <div className="absolute inset-0 bg-gradient-to-r from-blue-50 to-purple-50 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+                    <div className="relative z-10">
+                      <div className="flex items-center justify-between mb-4">
+                        <span className="inline-block px-3 py-1 bg-blue-100 text-blue-600 text-sm font-medium rounded-full">
+                          {article.categories?.name || getCategoryName(article.category_id)}
+                        </span>
+                        <span className="text-sm text-gray-500">
+                          <i className="fas fa-clock mr-1"></i>
+                          {article.read_time} 分钟
+                        </span>
+                      </div>
+                      
+                      <h3 
+                        className="text-xl font-bold text-gray-800 mb-3 line-clamp-2 hover:text-blue-600 transition-colors"
+                        style={{ fontFamily: 'Noto Serif SC, serif' }}
+                      >
+                        <Link to={`/article/${article.id}`}>
+                          {article.title}
+                        </Link>
+                      </h3>
+                      
+                      <p className="text-gray-600 mb-4 line-clamp-3">
+                        {article.excerpt}
+                      </p>
+                      
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center text-sm text-gray-500">
+                          <i className="fas fa-calendar mr-2"></i>
+                          {new Date(article.published_at).toLocaleDateString('zh-CN')}
+                        </div>
+                        
+                        <Link
+                          to={`/article/${article.id}`}
+                          className="inline-flex items-center text-blue-600 hover:text-blue-700 font-medium transition-all duration-300 group-hover:translate-x-1"
+                        >
+                          {siteConfig.site.readMoreText}
+                          <i className="fas fa-arrow-right ml-2 transition-transform duration-300 group-hover:translate-x-1"></i>
+                        </Link>
+                      </div>
                     </div>
-                    
-                    <Link
-                      to={`/article/${article.id}`}
-                      className="inline-flex items-center text-blue-600 hover:text-blue-700 font-medium transition-all duration-300 group-hover:translate-x-1"
-                    >
-                      {siteConfig.site.readMoreText}
-                      <i className="fas fa-arrow-right ml-2 transition-transform duration-300 group-hover:translate-x-1"></i>
-                    </Link>
                   </div>
-                  </div>
-                </div>
               </article>
-            ))}
+              ))
+            ) : (
+              <div className="col-span-full text-center py-12">
+                <p className="text-gray-500 text-lg">暂无文章</p>
+              </div>
+            )}
           </div>
         </div>
       </section>
 
       {/* Categories Section */}
-      <section className="py-20 px-6 bg-white relative overflow-hidden">
+      <section className="py-20 px-6 bg-white relative overflow-hidden" aria-labelledby="categories-title">
         {/* 背景装饰 */}
         <div className="absolute top-0 left-0 w-full h-full opacity-5">
           <div className="absolute top-10 left-10 w-32 h-32 bg-blue-500 rounded-full blur-3xl"></div>
@@ -346,6 +424,7 @@ export default function Home() {
         <div className="max-w-6xl mx-auto relative z-10">
           <div className="text-center mb-16 scroll-trigger">
             <h2 
+              id="categories-title"
               className="text-4xl md:text-5xl font-bold text-gray-800 mb-4"
               style={{ fontFamily: 'Noto Serif SC, serif' }}
             >
@@ -361,46 +440,54 @@ export default function Home() {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            {categories.map((category, index) => (
-              <Link
-                key={category.id}
-                to={`/categories/${category.id}`}
-                className="category-item magnetic group block p-8 bg-gradient-to-br from-gray-50 to-gray-100 rounded-xl hover:from-blue-50 hover:to-purple-50 transition-all duration-500 transform hover:-translate-y-2 hover:scale-105 hover:shadow-lg scroll-trigger relative overflow-hidden"
-                style={{ 
-                  transitionDelay: `${(index + 6) * 100}ms` 
-                }}
-              >
-                {/* 悬停光效 */}
-                <div className="absolute inset-0 bg-gradient-to-r from-blue-400/5 via-purple-400/5 to-pink-400/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500 rounded-xl"></div>
-                <div className="text-center relative z-10">
-                  <div className="w-16 h-16 bg-gradient-to-br from-blue-100 to-purple-100 rounded-full flex items-center justify-center mx-auto mb-4 group-hover:from-blue-200 group-hover:to-purple-200 transition-all duration-300 transform group-hover:scale-110 group-hover:rotate-12">
-                    <i className="fas fa-folder text-2xl text-blue-600 transition-transform duration-300 group-hover:scale-110"></i>
+            {!isLoaded ? (
+              <SkeletonLoader type="category" count={6} />
+            ) : categories.length > 0 ? (
+              categories.map((category, index) => (
+                <Link
+                  key={category.id}
+                  to={`/categories/${category.id}`}
+                  className="category-item magnetic group block p-8 bg-gradient-to-br from-gray-50 to-gray-100 rounded-xl hover:from-blue-50 hover:to-purple-50 transition-all duration-500 transform hover:-translate-y-2 hover:scale-105 hover:shadow-lg scroll-trigger relative overflow-hidden"
+                  style={{ 
+                    transitionDelay: `${(index + 6) * 100}ms` 
+                  }}
+                >
+                  {/* 悬停光效 */}
+                  <div className="absolute inset-0 bg-gradient-to-r from-blue-400/5 via-purple-400/5 to-pink-400/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500 rounded-xl"></div>
+                  <div className="text-center relative z-10">
+                    <div className="w-16 h-16 bg-gradient-to-br from-blue-100 to-purple-100 rounded-full flex items-center justify-center mx-auto mb-4 group-hover:from-blue-200 group-hover:to-purple-200 transition-all duration-300 transform group-hover:scale-110 group-hover:rotate-12">
+                      <i className="fas fa-folder text-2xl text-blue-600 transition-transform duration-300 group-hover:scale-110"></i>
+                    </div>
+                    
+                    <h3 
+                      className="text-xl font-bold text-gray-800 mb-2 group-hover:text-blue-600 transition-colors"
+                      style={{ fontFamily: 'Noto Serif SC, serif' }}
+                    >
+                      {category.name}
+                    </h3>
+                    
+                    <p className="text-gray-600 mb-4">
+                      {category.description}
+                    </p>
+                    
+                    <div className="flex items-center justify-center text-sm text-gray-500">
+                      <i className="fas fa-file-alt mr-2"></i>
+                      {category.article_count || 0} {siteConfig.site.articlesCountText}
+                    </div>
                   </div>
-                  
-                  <h3 
-                    className="text-xl font-bold text-gray-800 mb-2 group-hover:text-blue-600 transition-colors"
-                    style={{ fontFamily: 'Noto Serif SC, serif' }}
-                  >
-                    {category.name}
-                  </h3>
-                  
-                  <p className="text-gray-600 mb-4">
-                    {category.description}
-                  </p>
-                  
-                  <div className="flex items-center justify-center text-sm text-gray-500">
-                    <i className="fas fa-file-alt mr-2"></i>
-                    {category.article_count || 0} {siteConfig.site.articlesCountText}
-                  </div>
-                </div>
-              </Link>
-            ))}
+                </Link>
+              ))
+            ) : (
+              <div className="col-span-full text-center py-12">
+                <p className="text-gray-500 text-lg">暂无分类</p>
+              </div>
+            )}
           </div>
         </div>
       </section>
 
       {/* Footer */}
-      <footer className="bg-gradient-to-br from-gray-50 to-gray-100 border-t border-gray-200 py-12 px-6">
+      <footer className="bg-gradient-to-br from-gray-50 to-gray-100 border-t border-gray-200 py-12 px-6" role="contentinfo">
         <div className="max-w-6xl mx-auto text-center">
           <p 
             className="text-lg mb-2 text-gray-800"
@@ -416,6 +503,6 @@ export default function Home() {
           </p>
         </div>
       </footer>
-    </div>
+    </main>
   );
 }

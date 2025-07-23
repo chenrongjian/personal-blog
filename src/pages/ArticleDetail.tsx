@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useParams, Link, Navigate } from 'react-router-dom';
 import { ChevronUp } from 'lucide-react';
 import Navigation from '@/components/Navigation';
+import SEOHead, { generateArticleStructuredData } from '@/components/SEOHead';
 import useStore from '@/store/useStore';
 import MarkdownRenderer from '@/components/MarkdownRenderer';
 import type { Article, Category } from '@/lib/api';
@@ -62,12 +63,32 @@ export default function ArticleDetail() {
   const nextArticle = currentIndex < articles.length - 1 ? articles[currentIndex + 1] : null;
   
   return (
-    <div className="min-h-screen bg-gray-50">
+    <main className="min-h-screen bg-gray-50">
+      {article && (
+        <SEOHead
+          title={`${article.title} | 思维的碎片`}
+          description={article.excerpt || `${article.content.substring(0, 160)}...`}
+          keywords={`${article.title},${category?.name || ''},技术博客,编程,学习笔记`}
+          ogTitle={article.title}
+          ogDescription={article.excerpt || `${article.content.substring(0, 160)}...`}
+          ogUrl={`https://nobugcode.com/article/${article.id}`}
+          ogType="article"
+          canonicalUrl={`https://nobugcode.com/article/${article.id}`}
+          structuredData={generateArticleStructuredData({
+            title: article.title,
+            content: article.content,
+            author: article.author,
+            published_at: article.published_at,
+            category: category?.name,
+            url: `https://nobugcode.com/article/${article.id}`
+          })}
+        />
+      )}
       <Navigation />
       
       <article className="pt-24 pb-16">
         {/* Article Header */}
-        <header className="max-w-4xl mx-auto px-6 mb-12">
+        <header className="max-w-4xl mx-auto px-6 mb-12" role="banner">
           <div className={`transform transition-all duration-1000 ${
             isLoaded ? 'translate-y-0 opacity-100' : 'translate-y-10 opacity-0'
           }`}>
@@ -124,7 +145,7 @@ export default function ArticleDetail() {
         </header>
         
         {/* Article Content */}
-        <div className="max-w-4xl mx-auto px-6">
+        <section className="max-w-4xl mx-auto px-6">
           <div className={`bg-white rounded-xl shadow-sm p-8 md:p-12 transform transition-all duration-1000 delay-300 ${
             isLoaded ? 'translate-y-0 opacity-100' : 'translate-y-10 opacity-0'
           }`}>
@@ -133,10 +154,10 @@ export default function ArticleDetail() {
               className="max-w-none"
             />
           </div>
-        </div>
+        </section>
         
         {/* Navigation */}
-        <div className="max-w-4xl mx-auto px-6 mt-12">
+        <nav className="max-w-4xl mx-auto px-6 mt-12" aria-label="文章导航">
           <div className="flex flex-col md:flex-row gap-4">
             {prevArticle && (
               <Link
@@ -172,12 +193,13 @@ export default function ArticleDetail() {
               </Link>
             )}
           </div>
-        </div>
+        </nav>
         
         {/* Related Articles */}
         {relatedArticles.length > 0 && (
-          <section className="max-w-4xl mx-auto px-6 mt-16">
+          <section className="max-w-4xl mx-auto px-6 mt-16" aria-labelledby="related-articles-title">
             <h2 
+              id="related-articles-title"
               className="text-3xl font-bold text-gray-800 mb-8"
               style={{ fontFamily: 'Noto Serif SC, serif' }}
             >
@@ -232,6 +254,6 @@ export default function ArticleDetail() {
       >
         <ChevronUp className="w-5 h-5 group-hover:animate-bounce" />
       </button>
-    </div>
+    </main>
   );
 }

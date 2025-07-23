@@ -5,7 +5,7 @@ export const pageLoadAnimation = (target: string | HTMLElement, delay = 0) => {
   return animate(target, {
     translateY: [30, 0],
     opacity: [0, 1],
-    duration: 800,
+    duration: 600,
     delay: delay,
     easing: 'cubicBezier(0.25, 0.46, 0.45, 0.94)'
   });
@@ -113,94 +113,103 @@ export const pulseAnimation = (element: HTMLElement) => {
 };
 
 // 打字机效果
-export const typewriterAnimation = (element: HTMLElement, text: string, speed = 50) => {
-  element.textContent = '';
+export const typewriterAnimation = (
+  element: HTMLElement,
+  text: string,
+  speed: number = 80
+): (() => void) => {
   let i = 0;
+  let timeoutId: NodeJS.Timeout;
   
-  const timer = setInterval(() => {
-    if (i < text.length) {
-      element.textContent += text.charAt(i);
+  const type = () => {
+    if (i < text.length && element) {
+      element.textContent = text.slice(0, i + 1);
       i++;
-    } else {
-      clearInterval(timer);
+      timeoutId = setTimeout(type, speed);
     }
-  }, speed);
+  };
   
-  return timer;
+  // 立即开始，减少延迟
+  type();
+  
+  return () => {
+    clearTimeout(timeoutId);
+  };
 };
 
 // 循环打字机效果
-export const loopingTypewriterAnimation = (element: HTMLElement, text: string, speed = 50, loopInterval = 3000) => {
-  console.log('🎬 loopingTypewriterAnimation 被调用:', {
-    element,
-    text,
-    speed,
-    loopInterval,
-    elementTagName: element?.tagName,
-    elementClassName: element?.className
-  });
-  
+export const loopingTypewriterAnimation = (element: HTMLElement, text: string, speed = 50, loopInterval = 4000) => {
   if (!element || !text) {
-    console.warn('❌ 打字机动画：元素或文本为空', { element, text });
     return () => {};
   }
   
   let currentTimer: NodeJS.Timeout | null = null;
   let loopTimer: NodeJS.Timeout | null = null;
   let pauseTimer: NodeJS.Timeout | null = null;
+  let isDestroyed = false;
   
   const typeText = () => {
-    console.log('⌨️ 开始打字动画，文本:', text);
+    if (isDestroyed) return;
+    
     element.textContent = '';
     let i = 0;
     
-    currentTimer = setInterval(() => {
+    const typeChar = () => {
+      if (isDestroyed) return;
+      
       if (i < text.length) {
         const char = text.charAt(i);
         element.textContent += char;
-        console.log(`📝 添加字符 [${i}]: "${char}", 当前内容: "${element.textContent}"`);
         i++;
+        currentTimer = setTimeout(typeChar, speed);
       } else {
-        console.log('✅ 打字完成，当前内容:', element.textContent);
-        if (currentTimer) {
-          clearInterval(currentTimer);
-          currentTimer = null;
-        }
-        // 完成打字后暂停一段时间再开始下一轮
+        // 打字完成，暂停后开始下一轮
         pauseTimer = setTimeout(() => {
-          console.log('🔄 准备开始下一轮打字');
+          if (isDestroyed) return;
+          
           // 添加淡出效果
           element.style.opacity = '0.7';
           setTimeout(() => {
+            if (isDestroyed) return;
             element.style.opacity = '1';
+            // 开始下一轮循环
+            scheduleNextLoop();
           }, 200);
         }, 1500);
       }
-    }, speed);
+    };
+    
+    typeChar();
+  };
+  
+  const scheduleNextLoop = () => {
+    if (isDestroyed) return;
+    
+    const nextLoopDelay = loopInterval - (text.length * speed) - 1700; // 减去打字时间和暂停时间
+    loopTimer = setTimeout(() => {
+      if (!isDestroyed) {
+        typeText();
+      }
+    }, Math.max(nextLoopDelay, 1000)); // 至少等待1秒
   };
   
   // 立即执行第一次
-  console.log('🚀 立即执行第一次打字动画');
   typeText();
-  
-  // 设置循环定时器
-  console.log('⏰ 设置循环定时器，间隔:', loopInterval);
-  loopTimer = setInterval(() => {
-    console.log('🔄 循环定时器触发，开始新一轮打字');
-    typeText();
-  }, loopInterval);
   
   // 返回清理函数
   return () => {
-    console.log('🧹 清理打字机动画');
+    isDestroyed = true;
     if (currentTimer) {
-      clearInterval(currentTimer);
+      clearTimeout(currentTimer);
+      currentTimer = null;
     }
     if (loopTimer) {
-      clearInterval(loopTimer);
+      clearTimeout(loopTimer);
+      loopTimer = null;
     }
     if (pauseTimer) {
       clearTimeout(pauseTimer);
+      pauseTimer = null;
     }
   };
 };
@@ -287,8 +296,8 @@ export const particleFloatAnimation = (selector: string) => {
   const elements = document.querySelectorAll(selector);
   
   elements.forEach((element, index) => {
-    const delay = index * 200;
-    const duration = 3000 + Math.random() * 2000;
+    const delay = index * 100;
+    const duration = 2500 + Math.random() * 1500;
     
     animate(element, {
       translateY: [-20, 20],

@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import Navigation from '@/components/Navigation';
+import SEOHead, { generateCategoryStructuredData } from '@/components/SEOHead';
 import useStore from '@/store/useStore';
 
 export default function Categories() {
@@ -42,12 +43,72 @@ export default function Categories() {
   };
   
   return (
-    <div className="min-h-screen bg-gray-50">
+    <main className="min-h-screen bg-gray-50">
+      <SEOHead
+        title={selectedCategory 
+          ? `${selectedCategory.name} - 分类文章 | 思维的碎片`
+          : '文章分类 | 思维的碎片'
+        }
+        description={selectedCategory 
+          ? `${selectedCategory.description} - 共有 ${sortedArticles.length} 篇文章`
+          : '浏览所有文章分类，发现感兴趣的技术内容和学习资源'
+        }
+        keywords={selectedCategory 
+          ? `${selectedCategory.name},技术分类,编程文章,学习资源`
+          : '文章分类,技术博客,编程分类,学习资源'
+        }
+        ogTitle={selectedCategory 
+          ? `${selectedCategory.name} - 分类文章`
+          : '文章分类'
+        }
+        ogDescription={selectedCategory 
+          ? `${selectedCategory.description} - 共有 ${sortedArticles.length} 篇文章`
+          : '浏览所有文章分类，发现感兴趣的技术内容和学习资源'
+        }
+        ogUrl={selectedCategory 
+          ? `https://nobugcode.com/categories/${selectedCategory.id}`
+          : 'https://nobugcode.com/categories'
+        }
+        canonicalUrl={selectedCategory 
+          ? `https://nobugcode.com/categories/${selectedCategory.id}`
+          : 'https://nobugcode.com/categories'
+        }
+        structuredData={selectedCategory 
+          ? generateCategoryStructuredData({
+              name: selectedCategory.name,
+              description: selectedCategory.description,
+              url: `https://nobugcode.com/categories/${selectedCategory.id}`,
+              articleCount: sortedArticles.length
+            })
+          : {
+              "@context": "https://schema.org",
+              "@type": "CollectionPage",
+              "name": "文章分类",
+              "description": "浏览所有文章分类，发现感兴趣的技术内容和学习资源",
+              "url": "https://nobugcode.com/categories",
+              "mainEntity": {
+                "@type": "ItemList",
+                "numberOfItems": categories.length,
+                "itemListElement": categories.map((cat, index) => ({
+                  "@type": "ListItem",
+                  "position": index + 1,
+                  "item": {
+                    "@type": "Thing",
+                    "name": cat.name,
+                    "description": cat.description,
+                    "url": `https://nobugcode.com/categories/${cat.id}`
+                  }
+                }))
+              },
+              "inLanguage": "zh-CN"
+            }
+        }
+      />
       <Navigation />
       
-      <div className="pt-24 pb-16">
+      <div className="pt-24 pb-16" role="main">
         {/* Header */}
-        <header className="max-w-6xl mx-auto px-6 mb-12">
+        <header className="max-w-6xl mx-auto px-6 mb-12" role="banner">
           <div className={`transform transition-all duration-1000 ${
             isLoaded ? 'translate-y-0 opacity-100' : 'translate-y-10 opacity-0'
           }`}>
@@ -93,7 +154,7 @@ export default function Categories() {
         
         {!selectedCategory ? (
           /* Categories Grid */
-          <section className="max-w-6xl mx-auto px-6">
+          <section className="max-w-6xl mx-auto px-6" aria-labelledby="categories-content">
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
               {categories.map((category, index) => (
                 <Link
@@ -133,7 +194,7 @@ export default function Categories() {
           </section>
         ) : (
           /* Articles List */
-          <section className="max-w-6xl mx-auto px-6">
+          <section className="max-w-6xl mx-auto px-6" aria-labelledby="articles-content">
             {/* Sort Controls */}
             <div className="flex flex-col sm:flex-row items-center justify-between mb-8 p-4 bg-white rounded-xl shadow-sm">
               <div className="flex items-center gap-4 mb-4 sm:mb-0">
@@ -241,6 +302,6 @@ export default function Categories() {
           </section>
         )}
       </div>
-    </div>
+    </main>
   );
 }
