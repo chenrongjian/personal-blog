@@ -181,21 +181,44 @@ export const articlesApi = {
     if (!user) throw new Error('User not authenticated')
     
     // 通过邮箱在 users 表中查找用户 ID
-    const { data: dbUser, error: userError } = await supabaseAdmin
+    const { data: dbUsers, error: userError } = await supabaseAdmin
       .from('users')
       .select('id')
       .eq('email', user.email)
-      .single()
     
-    if (userError || !dbUser) {
-      throw new Error('User not found in users table')
+    if (userError) {
+      throw new Error(`Failed to query users table: ${userError.message}`)
+    }
+    
+    let userId: string
+    
+    if (!dbUsers || dbUsers.length === 0) {
+      // 如果用户不存在，创建用户记录
+      const { data: newUser, error: createUserError } = await supabaseAdmin
+        .from('users')
+        .insert({
+          id: user.id,
+          email: user.email,
+          display_name: user.user_metadata?.display_name || user.email?.split('@')[0] || 'Anonymous',
+          role: 'admin' // 假设创建文章的用户是管理员
+        })
+        .select('id')
+        .single()
+      
+      if (createUserError || !newUser) {
+        throw new Error(`Failed to create user record: ${createUserError?.message}`)
+      }
+      
+      userId = newUser.id
+    } else {
+      userId = dbUsers[0].id
     }
     
     const { data, error } = await supabaseAdmin
       .from('articles')
       .insert({
         ...article,
-        author_id: dbUser.id,
+        author_id: userId,
         published_at: article.is_published ? new Date().toISOString() : null
       })
       .select()
