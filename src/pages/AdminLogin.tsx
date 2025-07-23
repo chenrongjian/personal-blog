@@ -148,18 +148,7 @@ export default function AdminLogin() {
             </button>
           </form>
           
-          {/* Demo Info */}
-          <div className="mt-8 p-4 bg-blue-50 border border-blue-200 rounded-lg">
-            <div className="flex items-start">
-              <i className="fas fa-info-circle text-blue-500 mr-2 mt-0.5"></i>
-              <div className="text-sm text-blue-700">
-                <p className="font-medium mb-1">管理员账户信息：</p>
-                <p>邮箱：admin@blog.com</p>
-                <p>密码：admin123</p>
-                <p className="text-xs mt-2 text-blue-600">请先在Supabase中创建此管理员账户</p>
-              </div>
-            </div>
-          </div>
+
         </div>
       </div>
     </div>

@@ -1,4 +1,4 @@
-import { supabase } from './supabase'
+import { supabase, supabaseAdmin, supabaseAuth } from './supabase'
 
 // 数据库类型定义
 export interface User {
@@ -55,7 +55,7 @@ export type UpdateCategory = Partial<Omit<Category, 'id' | 'created_at'>>;
 export const authApi = {
   // 管理员登录
   async signIn(email: string, password: string) {
-    const { data, error } = await supabase.auth.signInWithPassword({
+    const { data, error } = await supabaseAuth.auth.signInWithPassword({
       email,
       password
     })
@@ -66,13 +66,15 @@ export const authApi = {
 
   // 登出
   async signOut() {
-    const { error } = await supabase.auth.signOut()
-    if (error) throw error
+    // 完全跳过Supabase的signOut API调用，避免网络错误
+    // 仅在本地清除认证状态，由store的logout方法处理
+    // 这样可以避免控制台出现net::ERR_ABORTED错误
+    return Promise.resolve()
   },
 
   // 获取当前用户
   async getCurrentUser() {
-    const { data: { user }, error } = await supabase.auth.getUser()
+    const { data: { user }, error } = await supabaseAuth.auth.getUser()
     if (error) throw error
     return user
   },
@@ -83,7 +85,7 @@ export const authApi = {
     if (!user) return false
     
     // 通过email查找用户，因为Supabase Auth的用户ID与数据库users表的ID可能不同
-    const { data, error } = await supabase
+    const { data, error } = await supabaseAdmin
       .from('users')
       .select('role')
       .eq('email', user.email)
@@ -161,7 +163,7 @@ export const articlesApi = {
 
   // 管理员获取所有文章
   async getAllArticles() {
-    const { data, error } = await supabase
+    const { data, error } = await supabaseAdmin
       .from('articles')
       .select(`
         *,
@@ -179,7 +181,7 @@ export const articlesApi = {
     if (!user) throw new Error('User not authenticated')
     
     // 通过邮箱在 users 表中查找用户 ID
-    const { data: dbUser, error: userError } = await supabase
+    const { data: dbUser, error: userError } = await supabaseAdmin
       .from('users')
       .select('id')
       .eq('email', user.email)
@@ -189,7 +191,7 @@ export const articlesApi = {
       throw new Error('User not found in users table')
     }
     
-    const { data, error } = await supabase
+    const { data, error } = await supabaseAdmin
       .from('articles')
       .insert({
         ...article,
@@ -207,7 +209,7 @@ export const articlesApi = {
   async updateArticle(id: string, updates: UpdateArticle) {
     // 如果文章被发布且之前未发布，设置发布时间
     if (updates.is_published && !updates.published_at) {
-      const { data: currentArticle } = await supabase
+      const { data: currentArticle } = await supabaseAdmin
         .from('articles')
         .select('is_published')
         .eq('id', id)
@@ -218,7 +220,7 @@ export const articlesApi = {
       }
     }
     
-    const { data, error } = await supabase
+    const { data, error } = await supabaseAdmin
       .from('articles')
       .update({
         ...updates,
@@ -234,7 +236,7 @@ export const articlesApi = {
 
   // 删除文章（管理员）
   async deleteArticle(id: string) {
-    const { error } = await supabase
+    const { error } = await supabaseAdmin
       .from('articles')
       .delete()
       .eq('id', id)
@@ -295,7 +297,7 @@ export const categoriesApi = {
     const user = await authApi.getCurrentUser()
     if (!user) throw new Error('User not authenticated')
     
-    const { data, error } = await supabase
+    const { data, error } = await supabaseAdmin
       .from('categories')
       .insert(category)
       .select()
@@ -307,7 +309,7 @@ export const categoriesApi = {
 
   // 更新分类（管理员）
   async updateCategory(id: string, updates: UpdateCategory) {
-    const { data, error } = await supabase
+    const { data, error } = await supabaseAdmin
       .from('categories')
       .update(updates)
       .eq('id', id)
@@ -321,7 +323,7 @@ export const categoriesApi = {
   // 删除分类（管理员）
   async deleteCategory(id: string) {
     // 检查是否有文章使用此分类
-    const { data: articles } = await supabase
+    const { data: articles } = await supabaseAdmin
       .from('articles')
       .select('id')
       .eq('category_id', id)
@@ -331,7 +333,7 @@ export const categoriesApi = {
       throw new Error('Cannot delete category with existing articles')
     }
     
-    const { error } = await supabase
+    const { error } = await supabaseAdmin
       .from('categories')
       .delete()
       .eq('id', id)

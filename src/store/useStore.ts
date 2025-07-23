@@ -250,9 +250,24 @@ const useStore = create<BlogState>()((set, get) => ({
   logout: async () => {
     try {
       await authApi.signOut();
-      set({ isAuthenticated: false, user: null });
     } catch (error) {
-      set({ error: error instanceof Error ? error.message : '登出失败' });
+      // 忽略登出错误，因为用户意图是退出
+      console.warn('Logout error in store (忽略):', error);
+    } finally {
+      // 无论是否有错误都清除认证状态
+      set({ isAuthenticated: false, user: null });
+      
+      // 清除可能存储在localStorage中的Supabase会话数据
+      try {
+        const keys = Object.keys(localStorage);
+        keys.forEach(key => {
+          if (key.startsWith('sb-') || key.includes('supabase')) {
+            localStorage.removeItem(key);
+          }
+        });
+      } catch (error) {
+        console.warn('清除localStorage失败:', error);
+      }
     }
   },
 
