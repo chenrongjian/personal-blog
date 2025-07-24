@@ -1,6 +1,8 @@
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import { Toaster } from "sonner";
-import { ConfigProvider } from "@/contexts/ConfigContext";
+import { ConfigProvider, useConfig } from "@/contexts/ConfigContext";
+import { initAnalytics } from "@/lib/analytics";
+import { useEffect } from "react";
 import Home from "@/pages/Home";
 import BackToTop from "@/components/BackToTop";
 import ArticleDetail from "@/pages/ArticleDetail";
@@ -12,11 +14,30 @@ import ConfigManager from "@/pages/ConfigManager";
 import About from "@/pages/About";
 import ProtectedRoute from "@/components/ProtectedRoute";
 
+// Analytics初始化组件
+function AnalyticsInitializer() {
+  const { config } = useConfig();
+
+  useEffect(() => {
+    if (config.analytics?.gaTrackingId) {
+      initAnalytics({
+        gaTrackingId: config.analytics.gaTrackingId,
+        ga4PropertyId: config.analytics.ga4PropertyId,
+        enableGAReportingAPI: config.analytics.enableGAReportingAPI,
+        enableLocalStats: config.analytics.enableLocalStats
+      });
+    }
+  }, [config.analytics]);
+
+  return null;
+}
+
 export default function App() {
   return (
     <ConfigProvider>
       <Router>
         <div className="App">
+          <AnalyticsInitializer />
           <Routes>
             <Route path="/" element={<Home />} />
             <Route path="/article/:id" element={<ArticleDetail />} />

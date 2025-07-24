@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom';
 import { useConfig } from '@/contexts/ConfigContext';
+import AnalyticsDisplay from './AnalyticsDisplay';
 
 export default function Footer() {
   const { config: siteConfig } = useConfig();
@@ -168,6 +169,15 @@ export default function Footer() {
         
         {/* 分割线 */}
         <div className="border-t border-gray-300 my-8"></div>
+        
+        {/* 网站统计 */}
+        <div className="mb-6">
+          <AnalyticsDisplay 
+            variant="compact" 
+            className="justify-center" 
+            showTitle={false}
+          />
+        </div>
         
         {/* 底部版权信息 */}
         <div className="text-center space-y-2">

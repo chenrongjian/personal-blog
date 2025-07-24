@@ -3,6 +3,7 @@ import { useParams, Link, Navigate } from 'react-router-dom';
 import { ChevronUp } from 'lucide-react';
 import Navigation from '@/components/Navigation';
 import SEOHead, { generateArticleStructuredData } from '@/components/SEOHead';
+import ArticleViews from '@/components/ArticleViews';
 import useStore from '@/store/useStore';
 import MarkdownRenderer from '@/components/MarkdownRenderer';
 import type { Article, Category } from '@/lib/api';
@@ -140,6 +141,12 @@ export default function ArticleDetail() {
                 <i className="fas fa-clock mr-2"></i>
                 <span>{article.read_time} 分钟阅读</span>
               </div>
+              
+              <ArticleViews 
+                articleId={article.id} 
+                title={article.title}
+                className="flex items-center"
+              />
             </div>
           </div>
         </header>

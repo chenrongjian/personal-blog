@@ -56,6 +56,18 @@ export interface SiteConfig {
     postsPerPage: number;
   };
   
+  // 统计分析配置
+  analytics?: {
+    gaTrackingId: string;
+    ga4PropertyId?: string;
+    enablePublicStats: boolean;
+    showViewsOnArticles: boolean;
+    enableTrendCharts: boolean;
+    enableGAReportingAPI?: boolean;
+    enableLocalStats?: boolean;
+    localStatsRetentionDays?: number;
+  };
+  
   // 页脚信息
   footer: {
     copyright: string;
@@ -112,6 +124,17 @@ export const defaultSiteConfig: SiteConfig = {
     showWechatQr: false,
     enableComments: false,
     postsPerPage: 10
+  },
+  
+  analytics: {
+    gaTrackingId: "",
+    ga4PropertyId: "",
+    enablePublicStats: true,
+    showViewsOnArticles: true,
+    enableTrendCharts: true,
+    enableGAReportingAPI: false,
+    enableLocalStats: true,
+    localStatsRetentionDays: 30
   },
   
   footer: {

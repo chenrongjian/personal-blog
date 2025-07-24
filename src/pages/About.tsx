@@ -2,6 +2,7 @@ import { useConfig } from '@/contexts/ConfigContext';
 import Navigation from '@/components/Navigation';
 import Footer from '@/components/Footer';
 import SEOHead from '@/components/SEOHead';
+import AnalyticsDisplay from '@/components/AnalyticsDisplay';
 import { User, Mail, MapPin, Calendar } from 'lucide-react';
 
 export default function About() {
@@ -83,6 +84,15 @@ export default function About() {
                   </div>
                 )}
               </div>
+            </div>
+
+            {/* 网站统计 */}
+            <div className="bg-white rounded-lg shadow-lg p-8 mb-8">
+              <AnalyticsDisplay 
+                variant="detailed" 
+                showTitle={true}
+                className=""
+              />
             </div>
 
             {/* 技术栈 */}

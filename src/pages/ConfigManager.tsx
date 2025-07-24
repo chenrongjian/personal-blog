@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useConfig } from '../contexts/ConfigContext';
 import { SiteConfig } from '../config/siteConfig';
+import AnalyticsConfigTab from '../components/AnalyticsConfigTab';
 
 export default function ConfigManager() {
   const { config, updateConfig, resetConfig, isLoading } = useConfig();
@@ -63,6 +64,7 @@ export default function ConfigManager() {
     { id: 'author', label: '作者信息', icon: 'fas fa-user' },
     { id: 'social', label: '社交媒体', icon: 'fas fa-share-alt' },
     { id: 'navigation', label: '导航设置', icon: 'fas fa-bars' },
+    { id: 'analytics', label: '统计分析', icon: 'fas fa-chart-bar' },
     { id: 'footer', label: '页脚设置', icon: 'fas fa-copyright' }
   ];
 
@@ -479,6 +481,14 @@ export default function ConfigManager() {
                   </label>
                 </div>
               </div>
+            )}
+
+            {/* Analytics Tab */}
+            {activeTab === 'analytics' && (
+              <AnalyticsConfigTab 
+                localConfig={localConfig} 
+                handleInputChange={handleInputChange} 
+              />
             )}
 
             {/* Footer Tab */}
