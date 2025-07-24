@@ -96,15 +96,45 @@ export default function Footer() {
               <Link to="/" className="block text-gray-600 hover:text-blue-600 transition-colors duration-300 text-sm hover:translate-x-1 transform">
                 首页
               </Link>
-              <Link to="/categories" className="block text-gray-600 hover:text-blue-600 transition-colors duration-300 text-sm hover:translate-x-1 transform">
+              <Link 
+                to="/categories" 
+                className="block text-gray-600 hover:text-blue-600 transition-colors duration-300 text-sm hover:translate-x-1 transform cursor-pointer"
+                onClick={(e) => {
+                  e.preventDefault();
+                  window.location.href = '/categories';
+                }}
+              >
                 文章分类
               </Link>
-              <a href="#featured" className="block text-gray-600 hover:text-blue-600 transition-colors duration-300 text-sm hover:translate-x-1 transform">
+              <Link 
+                to="/" 
+                className="block text-gray-600 hover:text-blue-600 transition-colors duration-300 text-sm hover:translate-x-1 transform cursor-pointer"
+                onClick={(e) => {
+                  e.preventDefault();
+                  window.location.href = '/#featured';
+                  setTimeout(() => {
+                    const element = document.getElementById('featured');
+                    if (element) {
+                      element.scrollIntoView({ behavior: 'smooth' });
+                    }
+                  }, 100);
+                }}
+              >
                 精选文章
-              </a>
-              <a href="/about" className="block text-gray-600 hover:text-blue-600 transition-colors duration-300 text-sm hover:translate-x-1 transform">
-                关于我们
-              </a>
+              </Link>
+              <Link 
+                to="/about" 
+                className="block text-gray-600 hover:text-blue-600 transition-colors duration-300 text-sm hover:translate-x-1 transform cursor-pointer"
+                onClick={(e) => {
+                  e.preventDefault();
+                  window.location.href = '/about';
+                  setTimeout(() => {
+                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                  }, 100);
+                }}
+              >
+                关于我
+              </Link>
             </div>
           </div>
           

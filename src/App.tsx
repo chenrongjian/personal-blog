@@ -9,6 +9,7 @@ import AdminLogin from "@/pages/AdminLogin";
 import ArticleManagement from "@/pages/ArticleManagement";
 import CategoryManagement from "@/pages/CategoryManagement";
 import ConfigManager from "@/pages/ConfigManager";
+import About from "@/pages/About";
 import ProtectedRoute from "@/components/ProtectedRoute";
 
 export default function App() {
@@ -21,6 +22,7 @@ export default function App() {
             <Route path="/article/:id" element={<ArticleDetail />} />
             <Route path="/categories" element={<Categories />} />
             <Route path="/categories/:categoryId" element={<Categories />} />
+            <Route path="/about" element={<About />} />
             <Route path="/admin/login" element={<AdminLogin />} />
             <Route path="/admin/articles" element={
               <ProtectedRoute>
