@@ -1,12 +1,15 @@
 import { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import Navigation from '@/components/Navigation';
+import Footer from '@/components/Footer';
 import SEOHead, { generateCategoryStructuredData } from '@/components/SEOHead';
 import useStore from '@/store/useStore';
+import { useConfig } from '@/contexts/ConfigContext';
 
 export default function Categories() {
   const { categoryId } = useParams<{ categoryId?: string }>();
   const { articles, categories, getArticlesByCategory, fetchArticles, fetchCategories } = useStore();
+  const { config: siteConfig } = useConfig();
   const [isLoaded, setIsLoaded] = useState(false);
   const [sortBy, setSortBy] = useState<'date' | 'title'>('date');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
@@ -302,6 +305,8 @@ export default function Categories() {
           </section>
         )}
       </div>
+
+      <Footer />
     </main>
   );
 }

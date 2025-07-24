@@ -1,11 +1,14 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import Navigation from '@/components/Navigation';
+import Footer from '@/components/Footer';
 import useStore from '@/store/useStore';
+import { useConfig } from '@/contexts/ConfigContext';
 import type { Article } from '@/lib/api';
 
 export default function ArticleManagement() {
   const { articles, categories, addArticle, updateArticle, deleteArticle, fetchArticles, fetchCategories } = useStore();
+  const { config: siteConfig } = useConfig();
   const [isLoaded, setIsLoaded] = useState(false);
   const [showModal, setShowModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
@@ -471,6 +474,8 @@ export default function ArticleManagement() {
           </div>
         </div>
       )}
+
+      <Footer />
     </div>
   );
 }

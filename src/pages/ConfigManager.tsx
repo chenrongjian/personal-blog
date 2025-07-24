@@ -61,6 +61,7 @@ export default function ConfigManager() {
   const tabs = [
     { id: 'site', label: '网站信息', icon: 'fas fa-globe' },
     { id: 'author', label: '作者信息', icon: 'fas fa-user' },
+    { id: 'social', label: '社交媒体', icon: 'fas fa-share-alt' },
     { id: 'navigation', label: '导航设置', icon: 'fas fa-bars' },
     { id: 'footer', label: '页脚设置', icon: 'fas fa-copyright' }
   ];
@@ -358,6 +359,124 @@ export default function ConfigManager() {
                       placeholder="退出"
                     />
                   </div>
+                </div>
+              </div>
+            )}
+
+            {/* Social Tab */}
+            {activeTab === 'social' && (
+              <div className="space-y-6">
+                <h3 className="text-lg font-medium text-gray-800 mb-4">社交媒体设置</h3>
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      邮箱地址
+                    </label>
+                    <input
+                      type="email"
+                      value={localConfig.social?.email || ''}
+                      onChange={(e) => handleInputChange('social.email', e.target.value)}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      placeholder="your@email.com"
+                    />
+                  </div>
+                  
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      GitHub
+                    </label>
+                    <input
+                      type="url"
+                      value={localConfig.social?.github || ''}
+                      onChange={(e) => handleInputChange('social.github', e.target.value)}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      placeholder="https://github.com/username"
+                    />
+                  </div>
+                  
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Twitter
+                    </label>
+                    <input
+                      type="url"
+                      value={localConfig.social?.twitter || ''}
+                      onChange={(e) => handleInputChange('social.twitter', e.target.value)}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      placeholder="https://twitter.com/username"
+                    />
+                  </div>
+                  
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      LinkedIn
+                    </label>
+                    <input
+                      type="url"
+                      value={localConfig.social?.linkedin || ''}
+                      onChange={(e) => handleInputChange('social.linkedin', e.target.value)}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      placeholder="https://linkedin.com/in/username"
+                    />
+                  </div>
+                </div>
+                
+                {/* WeChat QR Code Section */}
+                <div className="mt-8 p-4 bg-gray-50 rounded-lg">
+                  <h4 className="text-md font-medium text-gray-800 mb-4">公众号二维码设置</h4>
+                  
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        二维码标题
+                      </label>
+                      <input
+                        type="text"
+                        value={localConfig.social?.wechatTitle || ''}
+                        onChange={(e) => handleInputChange('social.wechatTitle', e.target.value)}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        placeholder="关注我的公众号"
+                      />
+                    </div>
+                    
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        二维码图片链接
+                      </label>
+                      <input
+                        type="url"
+                        value={localConfig.social?.wechatQrCode || ''}
+                        onChange={(e) => handleInputChange('social.wechatQrCode', e.target.value)}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        placeholder="https://example.com/qrcode.jpg"
+                      />
+                    </div>
+                  </div>
+                  
+                  <div className="mt-4">
+                    <label className="flex items-center">
+                      <input
+                        type="checkbox"
+                        checked={localConfig.settings?.showWechatQr || false}
+                        onChange={(e) => handleInputChange('settings.showWechatQr', e.target.checked)}
+                        className="mr-2 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                      />
+                      <span className="text-sm text-gray-700">在页脚显示公众号二维码</span>
+                    </label>
+                  </div>
+                </div>
+                
+                <div className="mt-6">
+                  <label className="flex items-center">
+                    <input
+                      type="checkbox"
+                      checked={localConfig.settings?.showSocial || false}
+                      onChange={(e) => handleInputChange('settings.showSocial', e.target.checked)}
+                      className="mr-2 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                    />
+                    <span className="text-sm text-gray-700">在页脚显示社交媒体链接</span>
+                  </label>
                 </div>
               </div>
             )}

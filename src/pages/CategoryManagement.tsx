@@ -1,10 +1,14 @@
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
+import { supabase } from '@/lib/supabase';
 import Navigation from '@/components/Navigation';
+import Footer from '@/components/Footer';
 import useStore from '@/store/useStore';
+import { useConfig } from '@/contexts/ConfigContext';
 import type { Category } from '@/lib/api';
 
 export default function CategoryManagement() {
+  const { config: siteConfig } = useConfig();
   const { categories, articles, addCategory, updateCategory, deleteCategory, fetchCategories, fetchArticles } = useStore();
   const [isLoaded, setIsLoaded] = useState(false);
   const [showModal, setShowModal] = useState(false);
@@ -421,6 +425,8 @@ export default function CategoryManagement() {
           </div>
         </div>
       )}
+
+      <Footer />
     </div>
   );
 }

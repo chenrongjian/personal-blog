@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import Navigation from '@/components/Navigation';
 import SEOHead from '@/components/SEOHead';
 import SkeletonLoader from '@/components/SkeletonLoader';
+import Footer from '@/components/Footer';
 import useStore from '@/store/useStore';
 import { 
   pageLoadAnimation, 
@@ -486,23 +487,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Footer */}
-      <footer className="bg-gradient-to-br from-gray-50 to-gray-100 border-t border-gray-200 py-12 px-6" role="contentinfo">
-        <div className="max-w-6xl mx-auto text-center">
-          <p 
-            className="text-lg mb-2 text-gray-800"
-            style={{ fontFamily: 'Noto Serif SC, serif' }}
-          >
-            {siteConfig.site.title}
-          </p>
-          <p 
-            className="text-gray-600"
-            style={{ fontFamily: 'Source Sans Pro, sans-serif' }}
-          >
-            {siteConfig.footer.copyright}
-          </p>
-        </div>
-      </footer>
+      <Footer />
     </main>
   );
 }

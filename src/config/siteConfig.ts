@@ -43,12 +43,15 @@ export interface SiteConfig {
     twitter?: string;
     linkedin?: string;
     email?: string;
+    wechatTitle?: string;
+    wechatQrCode?: string;
   };
   
   // 网站设置
   settings: {
     showAuthor: boolean;
     showSocial: boolean;
+    showWechatQr?: boolean;
     enableComments: boolean;
     postsPerPage: number;
   };
@@ -98,12 +101,15 @@ export const defaultSiteConfig: SiteConfig = {
     github: "",
     twitter: "",
     linkedin: "",
-    email: ""
+    email: "",
+    wechatTitle: "",
+    wechatQrCode: ""
   },
   
   settings: {
     showAuthor: true,
     showSocial: false,
+    showWechatQr: false,
     enableComments: false,
     postsPerPage: 10
   },
