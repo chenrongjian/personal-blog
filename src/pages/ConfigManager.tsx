@@ -139,7 +139,7 @@ export default function ConfigManager() {
                       value={localConfig.site.typewriterText}
                       onChange={(e) => handleInputChange('site.typewriterText', e.target.value)}
                       className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      placeholder="思维的碎片"
+                      placeholder="陈荣健的博客"
                     />
                   </div>
                   
@@ -179,7 +179,7 @@ export default function ConfigManager() {
                       value={localConfig.site.description}
                       onChange={(e) => handleInputChange('site.description', e.target.value)}
                       className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      placeholder="记录技术成长路径，分享生活感悟点滴"
+                      placeholder="拥抱AI,共同进化"
                     />
                   </div>
                 </div>

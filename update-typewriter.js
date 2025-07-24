@@ -19,12 +19,12 @@ async function updateTypewriterConfig() {
       .update({
         config_value: {
           site: {
-            title: '思维的碎片',
-            titleEn: 'Fragments',
-            typewriterText: '思维的碎片',
+            title: '陈荣健的博客',
+            titleEn: 'chenrongjian blog',
+            typewriterText: '陈荣健的博客',
             subtitle: '个人博客',
-            subtitleEn: 'Fragments of Thoughts',
-            description: '记录技术成长路径，分享生活感悟点滴',
+            subtitleEn: 'chenrongjian blog',
+            description: '拥抱AI,共同进化',
             exploreButtonText: '探索文章',
             continueReadingText: '继续阅读',
             scrollIndicatorText: '滚动探索',
@@ -37,8 +37,8 @@ async function updateTypewriterConfig() {
             loadingText: '加载中...'
           },
           author: {
-            name: '博主',
-            bio: '热爱技术，喜欢分享'
+            name: '陈荣健',
+            bio: '我是陈荣健，拥抱AI,共同进化'
           },
           navigation: {
             home: '首页',
@@ -60,7 +60,7 @@ async function updateTypewriterConfig() {
             postsPerPage: 10
           },
           footer: {
-            copyright: '© 2024 Personal Blog. All rights reserved.'
+            copyright: '© 2025 nobugcode.com. All rights reserved.'
           }
         }
       })
