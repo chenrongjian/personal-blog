@@ -1,10 +1,12 @@
 import React, { useEffect, useState } from 'react';
 import { useConfig } from '@/contexts/ConfigContext';
 import { analytics } from '@/lib/analytics';
+import { articlesApi } from '@/lib/api';
 
 interface ArticleViewsProps {
   articleId: string;
   title?: string;
+  initialViews?: number; // 从文章详情中传入的初始阅读量
   className?: string;
   showIcon?: boolean;
 }
@@ -12,6 +14,7 @@ interface ArticleViewsProps {
 const ArticleViews: React.FC<ArticleViewsProps> = ({
   articleId,
   title,
+  initialViews = 0,
   className = '',
   showIcon = true
 }) => {
@@ -35,41 +38,35 @@ const ArticleViews: React.FC<ArticleViewsProps> = ({
         // 跟踪文章阅读事件
         analytics.trackArticleView(articleId, title || '');
         
-        // 模拟获取阅读量（实际项目中需要从 GA API 获取）
-        // 这里使用本地存储模拟数据
-        const storageKey = `article_views_${articleId}`;
-        const storedViews = localStorage.getItem(storageKey);
+        // 使用传入的初始阅读量
+        setViews(initialViews);
         
-        if (storedViews) {
-          const viewData = JSON.parse(storedViews);
-          setViews(viewData.count || 0);
-        } else {
-          // 初始化阅读量（随机生成一个基础数值）
-          const initialViews = Math.floor(Math.random() * 100) + 10;
-          setViews(initialViews);
-          localStorage.setItem(storageKey, JSON.stringify({
-            count: initialViews,
-            lastUpdated: Date.now()
-          }));
+        // 检查是否在短时间内重复访问（防止刷新页面导致的重复计数）
+        const sessionKey = `article_viewed_${articleId}_time`;
+        const lastViewTime = sessionStorage.getItem(sessionKey);
+        const now = Date.now();
+        const cooldownPeriod = 30 * 1000; // 30秒冷却期
+        
+        if (!lastViewTime || (now - parseInt(lastViewTime)) > cooldownPeriod) {
+          // 增加阅读量（超过冷却期后才计数）
+          await articlesApi.incrementViewCount(articleId);
+          sessionStorage.setItem(sessionKey, now.toString());
+          
+          // 更新显示的阅读量（乐观更新）
+          setViews(initialViews + 1);
         }
-        
-        // 增加阅读量
-        const newViews = views + 1;
-        setViews(newViews);
-        localStorage.setItem(storageKey, JSON.stringify({
-          count: newViews,
-          lastUpdated: Date.now()
-        }));
         
       } catch (error) {
         console.error('Error tracking article views:', error);
+        // 发生错误时使用传入的初始值
+        setViews(initialViews || 1);
       } finally {
         setIsLoading(false);
       }
     };
 
     trackAndGetViews();
-  }, [articleId, title]);
+  }, [articleId, title, initialViews]);
 
   if (isLoading) {
     return (

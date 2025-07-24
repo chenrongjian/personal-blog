@@ -11,7 +11,7 @@ import '@/styles/markdown.css';
 
 export default function ArticleDetail() {
   const { id } = useParams<{ id: string }>();
-  const { fetchArticleById, incrementViewCount, articles, categories } = useStore();
+  const { fetchArticleById, articles, categories } = useStore();
   const [isLoaded, setIsLoaded] = useState(false);
   const [articleLoading, setArticleLoading] = useState(true);
   
@@ -24,7 +24,8 @@ export default function ArticleDetail() {
         const fetchedArticle = await fetchArticleById(id);
         if (fetchedArticle) {
           setArticle(fetchedArticle);
-          await incrementViewCount(id);
+          // 阅读量增加逻辑移到 ArticleViews 组件中处理
+          // 这样可以利用 sessionStorage 防重复机制
         }
         setArticleLoading(false);
       }
@@ -32,7 +33,7 @@ export default function ArticleDetail() {
     };
     
     loadArticle();
-  }, [id, fetchArticleById, incrementViewCount]);
+  }, [id, fetchArticleById]);
   
   // 显示加载状态
   if (articleLoading) {
@@ -145,6 +146,7 @@ export default function ArticleDetail() {
               <ArticleViews 
                 articleId={article.id} 
                 title={article.title}
+                initialViews={article.view_count || 0}
                 className="flex items-center"
               />
             </div>

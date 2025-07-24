@@ -129,8 +129,8 @@ export const articlesApi = {
     
     if (error) throw error
     
-    // 增加浏览量
-    await this.incrementViewCount(id)
+    // 注意：不在这里自动增加浏览量，由调用方决定是否需要增加
+    // 这样可以避免重复计数问题
     
     return data as Article
   },
@@ -143,6 +143,8 @@ export const articlesApi = {
     
     if (error) console.error('Failed to increment view count:', error)
   },
+
+  // 注意：阅读量已包含在 getArticleById 方法的返回数据中，无需单独获取
 
   // 获取分类下的文章（公开）
   async getArticlesByCategory(categoryId: string) {
