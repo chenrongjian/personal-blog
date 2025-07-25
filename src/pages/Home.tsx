@@ -166,7 +166,7 @@ export default function Home() {
 
   const featuredArticles = articles
     .filter(article => article.is_published)
-    .sort((a, b) => new Date(b.published_at).getTime() - new Date(a.published_at).getTime())
+    .sort((a, b) => (b.view_count || 0) - (a.view_count || 0))
     .slice(0, 6);
 
   const getCategoryName = (categoryId: string) => {
@@ -388,9 +388,15 @@ export default function Home() {
                       </p>
                       
                       <div className="flex items-center justify-between">
-                        <div className="flex items-center text-sm text-gray-500">
-                          <i className="fas fa-calendar mr-2"></i>
-                          {new Date(article.published_at).toLocaleDateString('zh-CN')}
+                        <div className="flex items-center space-x-4 text-sm text-gray-500">
+                          <div className="flex items-center">
+                            <i className="fas fa-calendar mr-2"></i>
+                            {new Date(article.published_at).toLocaleDateString('zh-CN')}
+                          </div>
+                          <div className="flex items-center">
+                            <i className="fas fa-eye mr-1"></i>
+                            {article.view_count || 0}
+                          </div>
                         </div>
                         
                         <Link
