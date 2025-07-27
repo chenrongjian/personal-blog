@@ -8,6 +8,7 @@ import Home from "@/pages/Home";
 import BackToTop from "@/components/BackToTop";
 import ArticleDetail from "@/pages/ArticleDetail";
 import Categories from "@/pages/Categories";
+import Featured from "@/pages/Featured";
 import AdminLogin from "@/pages/AdminLogin";
 import ArticleManagement from "@/pages/ArticleManagement";
 import CategoryManagement from "@/pages/CategoryManagement";
@@ -72,6 +73,7 @@ export default function App() {
             <Route path="/article/:id" element={<ArticleDetail />} />
             <Route path="/categories" element={<Categories />} />
             <Route path="/categories/:categoryId" element={<Categories />} />
+            <Route path="/featured" element={<Featured />} />
             <Route path="/about" element={<About />} />
             <Route path="/admin/login" element={<AdminLogin />} />
             <Route path="/admin/articles" element={

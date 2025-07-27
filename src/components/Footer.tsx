@@ -108,17 +108,11 @@ export default function Footer() {
                 文章分类
               </Link>
               <Link 
-                to="/" 
+                to="/featured" 
                 className="block text-gray-600 hover:text-blue-600 transition-colors duration-300 text-sm hover:translate-x-1 transform cursor-pointer"
                 onClick={(e) => {
                   e.preventDefault();
-                  window.location.href = '/#featured';
-                  setTimeout(() => {
-                    const element = document.getElementById('featured');
-                    if (element) {
-                      element.scrollIntoView({ behavior: 'smooth' });
-                    }
-                  }, 100);
+                  window.location.href = '/featured';
                 }}
               >
                 精选文章
