@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useConfig } from '@/contexts/ConfigContext';
+import { analytics } from '@/lib/analytics';
 
 interface AnalyticsStatusProps {
   className?: string;
@@ -7,74 +8,49 @@ interface AnalyticsStatusProps {
 
 const AnalyticsStatus: React.FC<AnalyticsStatusProps> = ({ className = '' }) => {
   const { config } = useConfig();
-  const [gaStatus, setGaStatus] = useState<'checking' | 'connected' | 'error' | 'disabled'>('disabled');
+  const [supabaseStatus, setSupabaseStatus] = useState<'checking' | 'connected' | 'error' | 'disabled'>('disabled');
   const [errorMessage, setErrorMessage] = useState<string>('');
 
   useEffect(() => {
-    const checkGAStatus = async () => {
-      if (!config.analytics?.gaTrackingId) {
-        setGaStatus('disabled');
+    const checkSupabaseStatus = async () => {
+      if (!config.analytics?.enabled) {
+        setSupabaseStatus('disabled');
         return;
       }
 
-      setGaStatus('checking');
+      setSupabaseStatus('checking');
       
       try {
-        // 检查网络连接
-        if (!navigator.onLine) {
-          setGaStatus('error');
-          setErrorMessage('网络连接不可用');
-          return;
-        }
-
-        // 检查GA脚本是否加载
-        if (typeof window.gtag === 'undefined') {
-          setGaStatus('error');
-          setErrorMessage('Google Analytics 脚本未加载');
-          return;
-        }
-
-        // 尝试ping GA服务
-        const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 3000);
-        
-        await fetch('https://www.google-analytics.com/g/collect', {
-          method: 'HEAD',
-          signal: controller.signal,
-          mode: 'no-cors'
-        });
-        
-        clearTimeout(timeoutId);
-        setGaStatus('connected');
-        setErrorMessage('');
+        // 检查Supabase连接状态
+        const data = await analytics.getAnalyticsData();
+        setSupabaseStatus(data ? 'connected' : 'error');
+        setErrorMessage(data ? '' : 'Supabase 连接失败');
       } catch (error) {
-        setGaStatus('error');
+        setSupabaseStatus('error');
         if (error instanceof Error) {
-          if (error.name === 'AbortError') {
-            setErrorMessage('Google Analytics 服务连接超时');
-          } else {
-            setErrorMessage('Google Analytics 服务不可用');
-          }
+          setErrorMessage(`Supabase 连接错误: ${error.message}`);
         } else {
-          setErrorMessage('未知错误');
+          setErrorMessage('Supabase 连接未知错误');
         }
       }
     };
 
-    checkGAStatus();
+    checkSupabaseStatus();
     
     // 每分钟检查一次
-    const interval = setInterval(checkGAStatus, 60000);
+    const interval = setInterval(() => {
+      checkSupabaseStatus();
+    }, 60000);
     
     return () => clearInterval(interval);
-  }, [config.analytics?.gaTrackingId]);
+  }, [config.analytics?.enabled]);
 
-  if (gaStatus === 'disabled') {
+  if (!config.analytics?.enabled || supabaseStatus === 'disabled') {
     return null;
   }
 
   const getStatusIcon = () => {
-    switch (gaStatus) {
+    switch (supabaseStatus) {
       case 'checking':
         return <i className="fas fa-spinner fa-spin text-yellow-500"></i>;
       case 'connected':
@@ -87,20 +63,20 @@ const AnalyticsStatus: React.FC<AnalyticsStatusProps> = ({ className = '' }) => 
   };
 
   const getStatusText = () => {
-    switch (gaStatus) {
+    switch (supabaseStatus) {
       case 'checking':
-        return '检查统计服务状态...';
+        return '检查Supabase统计服务状态...';
       case 'connected':
-        return '统计服务正常';
+        return 'Supabase统计服务正常';
       case 'error':
-        return `统计服务异常: ${errorMessage}`;
+        return `Supabase统计服务异常: ${errorMessage}`;
       default:
         return '';
     }
   };
 
   const getStatusColor = () => {
-    switch (gaStatus) {
+    switch (supabaseStatus) {
       case 'checking':
         return 'text-yellow-600';
       case 'connected':
@@ -113,17 +89,22 @@ const AnalyticsStatus: React.FC<AnalyticsStatusProps> = ({ className = '' }) => 
   };
 
   return (
-    <div className={`flex items-center space-x-2 text-sm ${getStatusColor()} ${className}`}>
-      {getStatusIcon()}
-      <span>{getStatusText()}</span>
-      {gaStatus === 'error' && (
-        <button
-          onClick={() => window.location.reload()}
-          className="ml-2 px-2 py-1 text-xs bg-red-100 text-red-700 rounded hover:bg-red-200 transition-colors"
-          title="重新加载页面"
-        >
-          重试
-        </button>
+    <div className={`space-y-2 ${className}`}>
+      {/* Supabase统计服务状态 */}
+      {(supabaseStatus === 'checking' || supabaseStatus === 'connected' || supabaseStatus === 'error') && (
+        <div className={`flex items-center space-x-2 text-sm ${getStatusColor()}`}>
+          {getStatusIcon()}
+          <span>{getStatusText()}</span>
+          {supabaseStatus === 'error' && (
+            <button
+              onClick={() => window.location.reload()}
+              className="ml-2 px-2 py-1 text-xs bg-red-100 text-red-700 rounded hover:bg-red-200 transition-colors"
+              title="重新加载页面"
+            >
+              重试
+            </button>
+          )}
+        </div>
       )}
     </div>
   );

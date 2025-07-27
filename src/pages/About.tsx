@@ -1,12 +1,19 @@
+import { useEffect } from 'react';
 import { useConfig } from '@/contexts/ConfigContext';
 import Navigation from '@/components/Navigation';
 import Footer from '@/components/Footer';
 import SEOHead from '@/components/SEOHead';
-import AnalyticsDisplay from '@/components/AnalyticsDisplay';
+
 import { User, Mail, MapPin, Calendar } from 'lucide-react';
+import { analytics } from '@/lib/analytics';
 
 export default function About() {
   const { config: siteConfig } = useConfig();
+
+  useEffect(() => {
+    // 跟踪页面访问
+    analytics.trackPageView(window.location.pathname, document.title);
+  }, []);
 
   return (
     <>
@@ -86,14 +93,7 @@ export default function About() {
               </div>
             </div>
 
-            {/* 网站统计 */}
-            <div className="bg-white rounded-lg shadow-lg p-8 mb-8">
-              <AnalyticsDisplay 
-                variant="detailed" 
-                showTitle={true}
-                className=""
-              />
-            </div>
+
 
             {/* 技术栈 */}
             <div className="bg-white rounded-lg shadow-lg p-8">

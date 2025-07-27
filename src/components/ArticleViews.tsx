@@ -22,13 +22,8 @@ const ArticleViews: React.FC<ArticleViewsProps> = ({
   const [views, setViews] = useState<number>(0);
   const [isLoading, setIsLoading] = useState(true);
 
-  // 如果未启用文章阅读量显示，则不渲染
-  if (!config.analytics?.showViewsOnArticles) {
-    return null;
-  }
-
-  // 如果没有配置 GA ID，则不显示
-  if (!config.analytics?.gaTrackingId) {
+  // 如果未启用统计功能或文章阅读量显示，则不渲染
+  if (!config.analytics?.enabled || !config.analytics?.showViewsOnArticles) {
     return null;
   }
 
@@ -36,7 +31,7 @@ const ArticleViews: React.FC<ArticleViewsProps> = ({
     const trackAndGetViews = async () => {
       try {
         // 跟踪文章阅读事件
-        analytics.trackArticleView(articleId, title || '');
+        analytics.trackArticleRead(articleId, title || '');
         
         // 使用传入的初始阅读量
         setViews(initialViews);

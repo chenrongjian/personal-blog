@@ -1,89 +1,66 @@
-// Google Analytics 配置管理
-import { GAConfig } from '@/lib/googleAnalyticsAPI';
+// Supabase 统计系统配置管理
 
-// Analytics 配置接口
+// Supabase 统计配置接口
 export interface AnalyticsSettings {
   // 基础配置
-  gaTrackingId: string;
+  enabled: boolean;
   enablePublicStats: boolean;
   showViewsOnArticles: boolean;
   enableTrendCharts: boolean;
   
-  // GA API 配置（可选）
-  gaPropertyId?: string;
-  enableGAAPI?: boolean;
+  // 数据保留配置
+  dataRetentionDays: number;
   
-  // 服务账号配置（仅服务端使用）
-  gaServiceAccount?: {
-    clientEmail: string;
-    privateKey: string;
-    projectId: string;
-  };
+  // 统计精度配置
+  trackingPrecision: 'realtime' | 'hourly' | 'daily';
   
-  // 本地统计配置
-  enableLocalStats: boolean;
-  localStatsRetentionDays: number;
+  // 隐私配置
+  anonymizeIp: boolean;
+  ignoreAdminVisits: boolean;
+  respectDoNotTrack: boolean;
+  
+  // 性能配置
+  enableBatching: boolean;
+  batchSize: number;
+  flushInterval: number; // 秒
 }
 
 // 默认配置
 export const defaultAnalyticsSettings: AnalyticsSettings = {
-  gaTrackingId: '',
+  enabled: true,
   enablePublicStats: true,
   showViewsOnArticles: true,
-  enableTrendCharts: false,
-  gaPropertyId: '',
-  enableGAAPI: false,
-  enableLocalStats: true,
-  localStatsRetentionDays: 30
+  enableTrendCharts: true,
+  dataRetentionDays: 90,
+  trackingPrecision: 'realtime',
+  anonymizeIp: true,
+  ignoreAdminVisits: true,
+  respectDoNotTrack: true,
+  enableBatching: true,
+  batchSize: 10,
+  flushInterval: 30
 };
 
 // 配置验证
 export const validateAnalyticsConfig = (config: Partial<AnalyticsSettings>): string[] => {
   const errors: string[] = [];
   
-  // 验证 GA Tracking ID 格式
-  if (config.gaTrackingId && !/^G-[A-Z0-9]{10}$/.test(config.gaTrackingId)) {
-    errors.push('GA跟踪ID格式不正确，应为 G-XXXXXXXXXX 格式');
+  // 验证数据保留天数
+  if (config.dataRetentionDays && (config.dataRetentionDays < 7 || config.dataRetentionDays > 365)) {
+    errors.push('数据保留天数应在7-365天之间');
   }
   
-  // 验证 GA Property ID 格式
-  if (config.gaPropertyId && !/^\d+$/.test(config.gaPropertyId)) {
-    errors.push('GA媒体资源ID应为纯数字');
+  // 验证批处理大小
+  if (config.batchSize && (config.batchSize < 1 || config.batchSize > 100)) {
+    errors.push('批处理大小应在1-100之间');
   }
   
-  // 如果启用了 GA API，必须提供 Property ID
-  if (config.enableGAAPI && !config.gaPropertyId) {
-    errors.push('启用GA API时必须提供媒体资源ID');
-  }
-  
-  // 验证本地统计保留天数
-  if (config.localStatsRetentionDays && (config.localStatsRetentionDays < 1 || config.localStatsRetentionDays > 365)) {
-    errors.push('本地统计保留天数应在1-365天之间');
+  // 验证刷新间隔
+  if (config.flushInterval && (config.flushInterval < 5 || config.flushInterval > 300)) {
+    errors.push('刷新间隔应在5-300秒之间');
   }
   
   return errors;
-};
-
-// 从配置生成 GA API 配置
-export const createGAConfig = (settings: AnalyticsSettings): GAConfig | null => {
-  if (!settings.enableGAAPI || !settings.gaPropertyId) {
-    return null;
-  }
-  
-  const gaConfig: GAConfig = {
-    propertyId: settings.gaPropertyId
-  };
-  
-  // 如果有服务账号配置，添加凭据
-  if (settings.gaServiceAccount) {
-    gaConfig.credentials = {
-      client_email: settings.gaServiceAccount.clientEmail,
-      private_key: settings.gaServiceAccount.privateKey,
-      project_id: settings.gaServiceAccount.projectId
-    };
-  }
-  
-  return gaConfig;
 };
 
 // 清理过期的本地统计数据
@@ -98,8 +75,8 @@ export const cleanupLocalStats = (retentionDays: number = 30): void => {
     const keysToRemove: string[] = [];
     for (let i = 0; i < localStorage.length; i++) {
       const key = localStorage.key(i);
-      if (key && key.startsWith('page_views_')) {
-        const dateStr = key.replace('page_views_', '');
+      if (key && key.startsWith('supabase_analytics_')) {
+        const dateStr = key.replace('supabase_analytics_', '').split('_')[0];
         const date = new Date(dateStr);
         if (date < cutoffDate) {
           keysToRemove.push(key);
@@ -110,7 +87,7 @@ export const cleanupLocalStats = (retentionDays: number = 30): void => {
     // 删除过期数据
     keysToRemove.forEach(key => localStorage.removeItem(key));
     
-    console.log(`Cleaned up ${keysToRemove.length} expired analytics entries`);
+
   } catch (error) {
     console.error('Failed to cleanup local stats:', error);
   }
@@ -126,7 +103,7 @@ export const exportLocalStats = (): any => {
     // 收集所有分析相关的本地存储数据
     for (let i = 0; i < localStorage.length; i++) {
       const key = localStorage.key(i);
-      if (key && (key.startsWith('page_views_') || key.includes('analytics'))) {
+      if (key && (key.startsWith('supabase_analytics_') || key.includes('analytics'))) {
         stats[key] = localStorage.getItem(key);
       }
     }
@@ -183,7 +160,7 @@ export const getStatsOverview = (): {
     
     for (let i = 0; i < localStorage.length; i++) {
       const key = localStorage.key(i);
-      if (key && (key.startsWith('page_views_') || key.includes('analytics'))) {
+      if (key && (key.startsWith('supabase_analytics_') || key.includes('analytics'))) {
         entries.push(key);
         const value = localStorage.getItem(key);
         if (value) {
@@ -194,8 +171,8 @@ export const getStatsOverview = (): {
     
     // 提取日期并排序
     const dates = entries
-      .filter(key => key.startsWith('page_views_'))
-      .map(key => key.replace('page_views_', ''))
+      .filter(key => key.startsWith('supabase_analytics_'))
+      .map(key => key.replace('supabase_analytics_', '').split('_')[0])
       .filter(date => /^\d{4}-\d{2}-\d{2}$/.test(date))
       .sort();
     

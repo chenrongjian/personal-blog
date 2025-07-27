@@ -3,6 +3,7 @@ import { Toaster } from "sonner";
 import { ConfigProvider, useConfig } from "@/contexts/ConfigContext";
 import { initAnalytics } from "@/lib/analytics";
 import { useEffect } from "react";
+import useStore from "@/store/useStore";
 import Home from "@/pages/Home";
 import BackToTop from "@/components/BackToTop";
 import ArticleDetail from "@/pages/ArticleDetail";
@@ -12,6 +13,10 @@ import ArticleManagement from "@/pages/ArticleManagement";
 import CategoryManagement from "@/pages/CategoryManagement";
 import ConfigManager from "@/pages/ConfigManager";
 import About from "@/pages/About";
+import Analytics from "@/pages/Analytics";
+import AnalyticsDetails from "@/pages/AnalyticsDetails";
+import AnalyticsConfig from "@/pages/AnalyticsConfig";
+
 import ProtectedRoute from "@/components/ProtectedRoute";
 
 // Analytics初始化组件
@@ -19,15 +24,38 @@ function AnalyticsInitializer() {
   const { config } = useConfig();
 
   useEffect(() => {
-    if (config.analytics?.gaTrackingId) {
-      initAnalytics({
-        gaTrackingId: config.analytics.gaTrackingId,
-        ga4PropertyId: config.analytics.ga4PropertyId,
-        enableGAReportingAPI: config.analytics.enableGAReportingAPI,
-        enableLocalStats: config.analytics.enableLocalStats
-      });
-    }
-  }, [config.analytics]);
+    // 初始化Supabase统计系统
+    const analyticsConfig = {
+      enabled: config.analytics?.enabled || false,
+      enableDetailedTracking: config.analytics?.enableDetailedTracking || false,
+      enablePublicStats: config.analytics?.enablePublicStats || false,
+      showViewsOnArticles: config.analytics?.showViewsOnArticles || false,
+      enableTrendCharts: config.analytics?.enableTrendCharts || false,
+      dataRetentionDays: config.analytics?.dataRetentionDays || 365,
+      batchSize: 10,
+      batchInterval: 30000,
+      trackingPrecision: 'hourly' as 'realtime' | 'hourly' | 'daily',
+      enableLocalStorage: true,
+      anonymizeIp: true,
+      ignoreAdminVisits: false,
+      respectDoNotTrack: true
+    };
+    
+
+    initAnalytics(analyticsConfig);
+  }, [config]);
+
+  return null;
+}
+
+// 认证状态初始化组件
+function AuthInitializer() {
+  const checkAuth = useStore(state => state.checkAuth);
+
+  useEffect(() => {
+    // 应用启动时检查认证状态
+    checkAuth();
+  }, [checkAuth]);
 
   return null;
 }
@@ -37,6 +65,7 @@ export default function App() {
     <ConfigProvider>
       <Router>
         <div className="App">
+          <AuthInitializer />
           <AnalyticsInitializer />
           <Routes>
             <Route path="/" element={<Home />} />
@@ -60,6 +89,22 @@ export default function App() {
                 <ConfigManager />
               </ProtectedRoute>
             } />
+            <Route path="/admin/analytics" element={
+              <ProtectedRoute>
+                <Analytics />
+              </ProtectedRoute>
+            } />
+            <Route path="/admin/analytics/details" element={
+              <ProtectedRoute>
+                <AnalyticsDetails />
+              </ProtectedRoute>
+            } />
+            <Route path="/admin/analytics/config" element={
+              <ProtectedRoute>
+                <AnalyticsConfig />
+              </ProtectedRoute>
+            } />
+
           </Routes>
           <BackToTop />
           <Toaster position="top-right" richColors />

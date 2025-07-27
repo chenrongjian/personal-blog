@@ -143,6 +143,14 @@ export default function CategoryManagement() {
                 </Link>
                 
                 <Link
+                  to="/admin/analytics"
+                  className="inline-flex items-center px-4 py-2 text-gray-600 hover:text-blue-600 transition-colors"
+                >
+                  <i className="fas fa-chart-bar mr-2"></i>
+                  统计分析
+                </Link>
+                
+                <Link
                   to="/admin/config"
                   className="inline-flex items-center px-4 py-2 text-gray-600 hover:text-blue-600 transition-colors"
                 >

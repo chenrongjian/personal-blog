@@ -58,14 +58,13 @@ export interface SiteConfig {
   
   // 统计分析配置
   analytics?: {
-    gaTrackingId: string;
-    ga4PropertyId?: string;
+    enabled: boolean;
     enablePublicStats: boolean;
     showViewsOnArticles: boolean;
     enableTrendCharts: boolean;
-    enableGAReportingAPI?: boolean;
-    enableLocalStats?: boolean;
-    localStatsRetentionDays?: number;
+    dataRetentionDays: number;
+    enableDetailedTracking: boolean;
+    enableRealTimeStats: boolean;
   };
   
   // 页脚信息
@@ -127,14 +126,13 @@ export const defaultSiteConfig: SiteConfig = {
   },
   
   analytics: {
-    gaTrackingId: "",
-    ga4PropertyId: "",
+    enabled: true,
     enablePublicStats: true,
     showViewsOnArticles: true,
     enableTrendCharts: true,
-    enableGAReportingAPI: false,
-    enableLocalStats: true,
-    localStatsRetentionDays: 30
+    dataRetentionDays: 30,
+    enableDetailedTracking: true,
+    enableRealTimeStats: false
   },
   
   footer: {
@@ -160,6 +158,25 @@ export const getSiteConfig = (): SiteConfig => {
   return defaultSiteConfig;
 };
 
+// 深度合并配置对象
+function deepMergeConfig(defaultConfig: SiteConfig, userConfig: any): SiteConfig {
+  const result = { ...defaultConfig };
+  
+  for (const key in userConfig) {
+    if (userConfig[key] && typeof userConfig[key] === 'object' && !Array.isArray(userConfig[key])) {
+      // 递归合并嵌套对象
+      result[key as keyof SiteConfig] = {
+        ...(defaultConfig[key as keyof SiteConfig] as any),
+        ...userConfig[key]
+      } as any;
+    } else {
+      (result as any)[key] = userConfig[key];
+    }
+  }
+  
+  return result;
+}
+
 // 异步获取网站配置（从数据库）
 export const getSiteConfigAsync = async (): Promise<SiteConfig> => {
   try {
@@ -168,8 +185,9 @@ export const getSiteConfigAsync = async (): Promise<SiteConfig> => {
     const dbConfig = await configApi.getSiteConfig();
     
     if (dbConfig) {
-      // 合并默认配置和数据库配置
-      return { ...defaultSiteConfig, ...dbConfig };
+      // 使用深度合并确保所有默认值都被保留
+      const mergedConfig = deepMergeConfig(defaultSiteConfig, dbConfig);
+      return mergedConfig;
     }
   } catch (error) {
     console.warn('Failed to fetch site config from database:', error);

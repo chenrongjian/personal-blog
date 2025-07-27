@@ -7,6 +7,7 @@ import ArticleViews from '@/components/ArticleViews';
 import useStore from '@/store/useStore';
 import MarkdownRenderer from '@/components/MarkdownRenderer';
 import type { Article, Category } from '@/lib/api';
+import { analytics } from '@/lib/analytics';
 import '@/styles/markdown.css';
 
 export default function ArticleDetail() {
@@ -18,6 +19,9 @@ export default function ArticleDetail() {
   const [article, setArticle] = useState<Article | null>(null);
   
   useEffect(() => {
+    // 跟踪页面访问
+    analytics.trackPageView(window.location.pathname, document.title);
+    
     const loadArticle = async () => {
       if (id) {
         setArticleLoading(true);

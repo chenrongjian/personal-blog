@@ -1,18 +1,7 @@
-// Google Analytics 工具类
+// Supabase 统计系统工具类
 import React from 'react';
-import { browserAnalytics, gaAPI, initGAAPI, getGAStats, type GA4ReportData, type GAConfig } from './googleAnalyticsAPI';
-
-// 声明全局gtag函数
-declare global {
-  interface Window {
-    gtag: (
-      command: 'config' | 'event' | 'js' | 'set',
-      targetId: string | Date,
-      config?: any
-    ) => void;
-    dataLayer: any[];
-  }
-}
+import { supabase, TABLES } from './supabase';
+import { AnalyticsAPI } from '@/utils/analyticsApi';
 
 // 统计数据接口
 export interface AnalyticsData {
@@ -26,363 +15,420 @@ export interface AnalyticsData {
 
 // 统计配置接口
 export interface AnalyticsConfig {
-  gaTrackingId: string;
+  enabled: boolean;
   enablePublicStats: boolean;
   showViewsOnArticles: boolean;
   enableTrendCharts: boolean;
+  dataRetentionDays: number;
+  trackingPrecision: 'realtime' | 'hourly' | 'daily';
+  anonymizeIp: boolean;
+  ignoreAdminVisits: boolean;
+  respectDoNotTrack: boolean;
 }
 
-class GoogleAnalytics {
+class SupabaseAnalytics {
   private isInitialized = false;
-  private trackingId = '';
-  private gaServiceAvailable = true;
-  private lastConnectionCheck = 0;
-  private connectionCheckInterval = 60000; // 1分钟检查一次
+  private config: AnalyticsConfig | null = null;
+  private batchQueue: Array<{type: string, data: any}> = [];
+  private batchTimer: NodeJS.Timeout | null = null;
+  private readonly batchSize = 10;
+  private readonly flushInterval = 30000; // 30秒
 
-  // 检测GA服务可用性
-  private async checkGAServiceAvailability(): Promise<boolean> {
-    const now = Date.now();
-    if (now - this.lastConnectionCheck < this.connectionCheckInterval) {
-      return this.gaServiceAvailable;
-    }
-
-    this.lastConnectionCheck = now;
-    
-    // 在本地开发环境中，跳过GA服务检查
-    if (typeof window !== 'undefined' && 
-        (window.location.hostname === 'localhost' || 
-         window.location.hostname === '127.0.0.1' ||
-         window.location.hostname.includes('localhost'))) {
-      console.warn('Local development environment detected, skipping GA service check');
-      this.gaServiceAvailable = false;
-      return false;
-    }
-    
-    // 检查网络连接状态
-    if (typeof navigator !== 'undefined' && navigator.onLine === false) {
-      console.warn('No internet connection, GA service unavailable');
-      this.gaServiceAvailable = false;
-      return false;
-    }
-    
-    // 简单的连接性检查，不发送实际请求
-    try {
-      // 检查是否有gtag函数和dataLayer
-      if (typeof window !== 'undefined' && window.gtag && window.dataLayer) {
-        this.gaServiceAvailable = true;
-        return true;
-      } else {
-        this.gaServiceAvailable = false;
-        return false;
-      }
-    } catch (error) {
-      console.warn('GA service check failed:', error);
-      this.gaServiceAvailable = false;
-      return false;
-    }
-  }
-
-  // 初始化Google Analytics
-  init(trackingId: string, gaConfig?: GAConfig): void {
-    if (!trackingId || this.isInitialized) {
+  // 初始化Supabase统计系统
+  init(config: AnalyticsConfig): void {
+    if (this.isInitialized) {
       return;
     }
 
-    this.trackingId = trackingId;
+    this.config = config;
+    this.isInitialized = true;
     
-    // 初始化浏览器分析
-    browserAnalytics.init(trackingId);
+
     
-    // 如果提供了 GA API 配置，初始化 GA API
-    if (gaConfig) {
-      try {
-        initGAAPI(gaConfig);
-        console.log('Google Analytics API initialized');
-      } catch (error) {
-        console.warn('Failed to initialize GA API, using browser-only analytics:', error);
-      }
+    // 启动批处理定时器
+    if (config.enabled) {
+      this.startBatchTimer();
+    }
+  }
+
+  // 启动批处理定时器
+  private startBatchTimer(): void {
+    if (this.batchTimer) {
+      clearInterval(this.batchTimer);
     }
     
-    // 确保gtag函数存在
-    if (typeof window !== 'undefined' && window.gtag) {
-      window.gtag('config', trackingId, {
-        page_title: document.title,
-        page_location: window.location.href,
-        send_page_view: true
-      });
-      this.isInitialized = true;
-      console.log('Google Analytics initialized with ID:', trackingId);
-      
-      // 记录初始页面访问
-      this.trackPageView(window.location.pathname, document.title);
+    this.batchTimer = setInterval(() => {
+      this.flushBatch();
+    }, this.flushInterval);
+  }
+
+  // 检查是否应该跟踪
+  private shouldTrack(): boolean {
+    if (!this.config?.enabled || !this.isInitialized) {
+      return false;
     }
+
+    // 检查Do Not Track设置
+    if (this.config.respectDoNotTrack && 
+        typeof navigator !== 'undefined' && 
+        navigator.doNotTrack === '1') {
+      return false;
+    }
+
+    // 检查是否忽略管理员访问
+    if (this.config.ignoreAdminVisits && this.isAdminUser()) {
+      return false;
+    }
+
+    return true;
+  }
+
+  // 检查是否为管理员用户
+  private isAdminUser(): boolean {
+    // 这里可以根据实际情况判断是否为管理员
+    // 例如检查localStorage中的用户信息或URL路径
+    if (typeof window !== 'undefined') {
+      return window.location.pathname.includes('/admin') || 
+             window.location.pathname.includes('/manage');
+    }
+    return false;
   }
 
   // 跟踪页面访问
   trackPageView(path: string, title?: string): void {
-    // 总是更新本地统计
-    if (typeof window !== 'undefined') {
-      browserAnalytics.incrementPageView();
-    }
-
-    if (!this.isInitialized || typeof window === 'undefined' || !window.gtag) {
+    if (!this.shouldTrack()) {
       return;
     }
 
-    // 异步检查GA服务可用性并发送数据
-    this.sendPageViewToGA(path, title).catch(error => {
-      console.warn('Failed to send page view to GA:', error);
+    const eventData = {
+      type: 'page_view',
+      path,
+      title: title || document.title,
+      timestamp: new Date().toISOString(),
+      userAgent: navigator.userAgent,
+      referrer: document.referrer,
+      ip: this.config?.anonymizeIp ? this.anonymizeIP() : undefined
+    };
+
+    // 立即发送或添加到批处理队列
+    if (this.config?.trackingPrecision === 'realtime') {
+      this.sendEvent(eventData);
+    } else {
+      this.addToBatch(eventData);
+    }
+
+    // 同时记录到本地存储用于离线统计
+    this.recordLocalPageView(path);
+  }
+
+  // 匿名化IP地址
+  private anonymizeIP(): string {
+    // 这里返回一个匿名化的标识符
+    return 'anonymized';
+  }
+
+  // 记录本地页面访问
+  private recordLocalPageView(path: string): void {
+    if (typeof window === 'undefined') return;
+
+    try {
+      const today = new Date().toISOString().split('T')[0];
+      const key = `supabase_analytics_${today}_${path.replace(/\//g, '_')}`;
+      const current = parseInt(localStorage.getItem(key) || '0');
+      localStorage.setItem(key, (current + 1).toString());
+    } catch (error) {
+      console.warn('Failed to record local page view:', error);
+    }
+  }
+
+  // 添加到批处理队列
+  private addToBatch(eventData: any): void {
+    this.batchQueue.push(eventData);
+    
+    // 如果队列达到批处理大小，立即发送
+    if (this.batchQueue.length >= this.batchSize) {
+      this.flushBatch();
+    }
+  }
+
+  // 发送批处理数据
+  private flushBatch(): void {
+    if (this.batchQueue.length === 0) {
+      return;
+    }
+
+    const batch = [...this.batchQueue];
+    this.batchQueue = [];
+
+    // 发送批处理数据到Supabase
+    this.sendBatchEvents(batch).catch(error => {
+      console.warn('Failed to send batch events:', error);
+      // 如果发送失败，可以考虑重新加入队列或记录到本地
     });
   }
 
-  // 异步发送页面访问数据到GA
-  private async sendPageViewToGA(path: string, title?: string): Promise<void> {
+  // 获取访客ID
+  private getVisitorId(): string {
+    let visitorId = localStorage.getItem('supabase_visitor_id');
+    if (!visitorId) {
+      visitorId = 'visitor_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+      localStorage.setItem('supabase_visitor_id', visitorId);
+    }
+    return visitorId;
+  }
+
+  // 获取会话ID
+  private getSessionId(): string {
+    let sessionId = sessionStorage.getItem('supabase_session_id');
+    if (!sessionId) {
+      sessionId = 'session_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+      sessionStorage.setItem('supabase_session_id', sessionId);
+    }
+    return sessionId;
+  }
+
+  // 获取设备类型
+  private getDeviceType(): 'desktop' | 'mobile' | 'tablet' {
+    const userAgent = navigator.userAgent;
+    if (/tablet|ipad|playbook|silk/i.test(userAgent)) {
+      return 'tablet';
+    }
+    if (/mobile|iphone|ipod|android|blackberry|opera|mini|windows\sce|palm|smartphone|iemobile/i.test(userAgent)) {
+      return 'mobile';
+    }
+    return 'desktop';
+  }
+
+  // 获取浏览器信息
+  private getBrowser(): string {
+    const userAgent = navigator.userAgent;
+    if (userAgent.includes('Chrome')) return 'Chrome';
+    if (userAgent.includes('Firefox')) return 'Firefox';
+    if (userAgent.includes('Safari')) return 'Safari';
+    if (userAgent.includes('Edge')) return 'Edge';
+    if (userAgent.includes('Opera')) return 'Opera';
+    return 'Unknown';
+  }
+
+  // 获取操作系统信息
+  private getOS(): string {
+    const userAgent = navigator.userAgent;
+    if (userAgent.includes('Windows')) return 'Windows';
+    if (userAgent.includes('Mac')) return 'macOS';
+    if (userAgent.includes('Linux')) return 'Linux';
+    if (userAgent.includes('Android')) return 'Android';
+    if (userAgent.includes('iOS')) return 'iOS';
+    return 'Unknown';
+  }
+
+  // 发送页面访问到Supabase
+  private async trackPageViewToSupabase(path: string, title?: string): Promise<void> {
     try {
-      // 在本地开发环境中，跳过GA跟踪
-      if (typeof window !== 'undefined' && 
-          (window.location.hostname === 'localhost' || 
-           window.location.hostname === '127.0.0.1' ||
-           window.location.hostname.includes('localhost'))) {
-        console.log('Local development environment, skipping GA tracking');
-        return;
-      }
-
-      // 检查网络连接
-      if (navigator.onLine === false) {
-        console.warn('No internet connection, skipping GA tracking');
-        return;
-      }
-
-      // 检查GA服务可用性
-      const isGAAvailable = await this.checkGAServiceAvailability();
-      if (!isGAAvailable) {
-        console.warn('GA service not available, skipping tracking');
-        return;
-      }
-
-      window.gtag('config', this.trackingId, {
-        page_path: path,
+      const visitData = {
+        page_url: path,
         page_title: title || document.title,
-        page_location: window.location.href,
-        send_page_view: true,
-        // 添加错误处理配置
-        transport_type: 'beacon',
-        custom_map: {'custom_parameter': 'value'}
-      });
+        visitor_id: this.getVisitorId(),
+        session_id: this.getSessionId(),
+        user_agent: navigator.userAgent,
+        referrer: document.referrer || null,
+        visit_time: new Date().toISOString(),
+        device_type: this.getDeviceType(),
+        browser: this.getBrowser(),
+        os: this.getOS(),
+        screen_resolution: `${screen.width}x${screen.height}`
+      };
+
+      await supabase.from(TABLES.PAGE_VISITS).insert([visitData]);
     } catch (error) {
-      console.warn('Failed to track page view:', error);
-      // 不再抛出错误，避免影响应用正常运行
+      console.warn('Failed to track page view to Supabase:', error);
+    }
+  }
+
+  // 发送单个事件
+  private async sendEvent(eventData: any): Promise<void> {
+    try {
+      await this.trackPageViewToSupabase(eventData.path, eventData.title);
+    } catch (error) {
+      console.warn('Failed to send event:', error);
+    }
+  }
+
+  // 发送批处理事件
+  private async sendBatchEvents(events: any[]): Promise<void> {
+    try {
+      // 这里可以实现批量发送到Supabase的逻辑
+      for (const event of events) {
+        if (event.type === 'page_view') {
+          await this.trackPageViewToSupabase(event.path, event.title);
+        }
+      }
+    } catch (error) {
+      console.warn('Failed to send batch events:', error);
     }
   }
 
   // 跟踪自定义事件
   trackEvent(eventName: string, parameters?: Record<string, any>): void {
-    if (!this.isInitialized || typeof window === 'undefined' || !window.gtag) {
+    if (!this.shouldTrack()) {
       return;
     }
 
+    const eventData = {
+      type: 'custom_event',
+      name: eventName,
+      parameters,
+      timestamp: new Date().toISOString(),
+      path: window.location.pathname
+    };
+
+    if (this.config?.trackingPrecision === 'realtime') {
+      this.sendCustomEvent(eventData);
+    } else {
+      this.addToBatch(eventData);
+    }
+  }
+
+  // 发送自定义事件
+  private async sendCustomEvent(eventData: any): Promise<void> {
     try {
-      // 在本地开发环境中，跳过GA事件跟踪
-      if (typeof window !== 'undefined' && 
-          (window.location.hostname === 'localhost' || 
-           window.location.hostname === '127.0.0.1' ||
-           window.location.hostname.includes('localhost'))) {
-        console.log(`Local development environment, skipping GA event: ${eventName}`);
-        return;
-      }
-
-      // 检查网络连接
-      if (navigator.onLine === false) {
-        console.warn('No internet connection, skipping GA event tracking');
-        return;
-      }
-
-      window.gtag('event', eventName, {
-        event_category: 'engagement',
-        event_label: parameters?.label,
-        value: parameters?.value,
-        transport_type: 'beacon',
-        ...parameters
-      });
+      // 这里可以实现发送自定义事件到Supabase的逻辑
+  
     } catch (error) {
-      console.warn('Failed to track event:', error);
+      console.warn('Failed to send custom event:', error);
     }
   }
 
   // 跟踪文章阅读
-  trackArticleView(articleId: string, articleTitle: string): void {
-    this.trackEvent('article_view', {
-      event_category: 'content',
-      event_label: articleTitle,
+  trackArticleRead(articleId: string, title: string): void {
+    this.trackEvent('article_read', {
       article_id: articleId,
-      content_type: 'article'
+      article_title: title
     });
   }
 
   // 跟踪搜索
-  trackSearch(searchTerm: string): void {
+  trackSearch(query: string, resultsCount: number): void {
     this.trackEvent('search', {
-      event_category: 'engagement',
-      search_term: searchTerm
+      search_query: query,
+      results_count: resultsCount
     });
   }
 
   // 跟踪下载
-  trackDownload(fileName: string): void {
-    this.trackEvent('file_download', {
-      event_category: 'engagement',
-      file_name: fileName
+  trackDownload(fileName: string, fileType: string): void {
+    this.trackEvent('download', {
+      file_name: fileName,
+      file_type: fileType
     });
   }
 
-  // 跟踪外部链接点击
-  trackOutboundLink(url: string): void {
-    this.trackEvent('click', {
-      event_category: 'outbound',
-      event_label: url,
-      transport_type: 'beacon'
-    });
-  }
-
-  // 获取基础统计数据（支持真实GA数据和本地统计）
-  async getBasicStats(): Promise<Partial<AnalyticsData>> {
-    // 检查是否配置了 Google Analytics
-    if (!this.trackingId) {
-      // 未配置 GA 时显示初始值
-      return {
-        totalViews: 0,
-        todayViews: 0,
-        popularArticles: [],
-        viewsTrend: []
-      };
-    }
-
+  // 获取统计数据
+  async getAnalyticsData(): Promise<AnalyticsData | null> {
     try {
-      // 尝试从 Google Analytics API 获取真实数据
-      if (gaAPI.isReady()) {
-        const gaData = await getGAStats();
-        return {
-          totalViews: gaData.totalViews,
-          todayViews: gaData.todayViews,
-          popularArticles: gaData.popularPages?.slice(0, 3).map((page, index) => ({
-            id: (index + 1).toString(),
-            title: page.title || page.path,
-            views: page.views
-          })) || [],
-          viewsTrend: gaData.viewsTrend?.map(trend => ({
-            date: trend.date,
-            views: trend.views
-          })) || []
-        };
-      }
+      // 这里可以从Supabase获取统计数据
+      const data = await AnalyticsAPI.getAnalyticsData();
+      return data;
     } catch (error) {
-      console.warn('Failed to fetch GA data, falling back to local stats:', error);
+      console.error('Failed to get analytics data:', error);
+      return null;
+    }
+  }
+
+  // 获取本地统计概览
+  getLocalStatsOverview(): {
+    totalEntries: number;
+    totalViews: number;
+    dateRange: { start: string | null; end: string | null };
+  } {
+    if (typeof window === 'undefined') {
+      return { totalEntries: 0, totalViews: 0, dateRange: { start: null, end: null } };
     }
 
-    // 回退到本地统计数据
     try {
-      const localPageViews = browserAnalytics.getLocalPageViews();
-      const localStats = await browserAnalytics.getLocalStats();
+      const entries: string[] = [];
+      let totalViews = 0;
+      const dates: string[] = [];
+
+      for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i);
+        if (key && key.startsWith('supabase_analytics_')) {
+          entries.push(key);
+          const views = parseInt(localStorage.getItem(key) || '0');
+          totalViews += views;
+          
+          const dateMatch = key.match(/supabase_analytics_(\d{4}-\d{2}-\d{2})_/);
+          if (dateMatch) {
+            dates.push(dateMatch[1]);
+          }
+        }
+      }
+
+      dates.sort();
       
       return {
-        totalViews: localPageViews.totalViews || localStats.totalViews || 0,
-        todayViews: localPageViews.todayViews || localStats.todayViews || 0,
-        popularArticles: localStats.popularPages?.slice(0, 3).map((page, index) => ({
-          id: (index + 1).toString(),
-          title: page.title || page.path,
-          views: page.views
-        })) || [
-          { id: '1', title: 'React 最佳实践', views: Math.floor(Math.random() * 20) + 5 },
-          { id: '2', title: 'TypeScript 进阶指南', views: Math.floor(Math.random() * 15) + 3 },
-          { id: '3', title: 'Tailwind CSS 技巧', views: Math.floor(Math.random() * 10) + 2 }
-        ],
-        viewsTrend: localStats.viewsTrend || Array.from({ length: 7 }, (_, i) => ({
-          date: new Date(Date.now() - (6 - i) * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-          views: Math.floor(Math.random() * 10) + 1
-        }))
+        totalEntries: entries.length,
+        totalViews,
+        dateRange: {
+          start: dates.length > 0 ? dates[0] : null,
+          end: dates.length > 0 ? dates[dates.length - 1] : null
+        }
       };
     } catch (error) {
-      console.error('Failed to load local stats:', error);
-      // 最后的回退方案
-      return {
-        totalViews: 0,
-        todayViews: 0,
-        popularArticles: [],
-        viewsTrend: []
-      };
+      console.error('Failed to get local stats overview:', error);
+      return { totalEntries: 0, totalViews: 0, dateRange: { start: null, end: null } };
     }
   }
 
-  // 检查是否已初始化
-  isReady(): boolean {
-    return this.isInitialized;
-  }
-
-  // 获取跟踪ID
-  getTrackingId(): string {
-    return this.trackingId;
+  // 清理资源
+  destroy(): void {
+    if (this.batchTimer) {
+      clearInterval(this.batchTimer);
+      this.batchTimer = null;
+    }
+    
+    // 发送剩余的批处理数据
+    this.flushBatch();
+    
+    this.isInitialized = false;
+    this.config = null;
   }
 }
 
-// 创建单例实例
-export const analytics = new GoogleAnalytics();
+// 导出单例实例
+export const analytics = new SupabaseAnalytics();
 
-// 便捷函数
-export const initAnalytics = (config: { gaTrackingId: string; ga4PropertyId?: string; enableGAReportingAPI?: boolean; enableLocalStats?: boolean }, gaConfig?: GAConfig) => {
-  if (config.gaTrackingId) {
-    analytics.init(config.gaTrackingId, gaConfig);
-    
-    // 初始化浏览器分析（如果启用本地统计）
-    if (config.enableLocalStats !== false) {
-      browserAnalytics.init(config.gaTrackingId);
-    }
-  }
+// 初始化函数
+export const initAnalytics = (config: AnalyticsConfig) => {
+  analytics.init(config);
 };
-export const trackPageView = (path: string, title?: string) => analytics.trackPageView(path, title);
-export const trackEvent = (eventName: string, parameters?: Record<string, any>) => analytics.trackEvent(eventName, parameters);
-export const trackArticleView = (articleId: string, articleTitle: string) => analytics.trackArticleView(articleId, articleTitle);
-export const getBasicStats = () => analytics.getBasicStats();
 
 // React Hook for analytics
 export const useAnalytics = () => {
-  const [stats, setStats] = React.useState<{
-    totalViews: number;
-    totalUsers: number;
-    todayViews: number;
-    avgSessionDuration: number;
-  }>({ totalViews: 0, totalUsers: 0, todayViews: 0, avgSessionDuration: 0 });
-  const [isLoading, setIsLoading] = React.useState(true);
+  const trackPageView = React.useCallback((path: string, title?: string) => {
+    analytics.trackPageView(path, title);
+  }, []);
 
-  React.useEffect(() => {
-    const loadStats = async () => {
-      try {
-        const data = await analytics.getBasicStats();
-        setStats({
-          totalViews: data.totalViews || 0,
-          totalUsers: Math.floor((data.totalViews || 0) * 0.7), // 模拟独立用户数
-          todayViews: data.todayViews || 0,
-          avgSessionDuration: 180 + Math.floor(Math.random() * 120) // 模拟平均停留时间（秒）
-        });
-      } catch (error) {
-        console.error('Failed to load analytics stats:', error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
+  const trackEvent = React.useCallback((eventName: string, parameters?: Record<string, any>) => {
+    analytics.trackEvent(eventName, parameters);
+  }, []);
 
-    loadStats();
+  const trackArticleRead = React.useCallback((articleId: string, title: string) => {
+    analytics.trackArticleRead(articleId, title);
   }, []);
 
   return {
-    stats,
-    isLoading,
-    trackPageView: analytics.trackPageView.bind(analytics),
-    trackEvent: analytics.trackEvent.bind(analytics),
-    trackArticleView: analytics.trackArticleView.bind(analytics),
+    trackPageView,
+    trackEvent,
+    trackArticleRead,
     trackSearch: analytics.trackSearch.bind(analytics),
-    trackDownload: analytics.trackDownload.bind(analytics),
-    trackOutboundLink: analytics.trackOutboundLink.bind(analytics),
-    getBasicStats: analytics.getBasicStats.bind(analytics),
-    isReady: analytics.isReady.bind(analytics)
+    trackDownload: analytics.trackDownload.bind(analytics)
   };
+};
+
+// 页面访问跟踪Hook
+export const usePageTracking = () => {
+  React.useEffect(() => {
+    // 跟踪当前页面
+    analytics.trackPageView(window.location.pathname, document.title);
+  }, []);
 };

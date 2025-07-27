@@ -1,7 +1,10 @@
 import React, { useState } from 'react';
+import { Link } from 'react-router-dom';
 import { useConfig } from '../contexts/ConfigContext';
 import { SiteConfig } from '../config/siteConfig';
 import AnalyticsConfigTab from '../components/AnalyticsConfigTab';
+import Navigation from '../components/Navigation';
+import Footer from '../components/Footer';
 
 export default function ConfigManager() {
   const { config, updateConfig, resetConfig, isLoading } = useConfig();
@@ -69,14 +72,67 @@ export default function ConfigManager() {
   ];
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8">
-      <div className="max-w-4xl mx-auto px-6">
-        <div className="bg-white rounded-lg shadow-sm">
-          {/* Header */}
-          <div className="border-b border-gray-200 px-6 py-4">
-            <h1 className="text-2xl font-bold text-gray-800">博客配置管理</h1>
-            <p className="text-gray-600 mt-1">自定义您的博客个性化信息</p>
+    <div className="min-h-screen bg-gray-50">
+      <Navigation />
+      
+      <div className="pt-24 pb-16">
+        {/* Header */}
+        <header className="max-w-7xl mx-auto px-6 mb-8">
+          <div className="mb-8">
+            <div className="flex flex-col md:flex-row items-start md:items-center justify-between">
+              <div>
+                <h1 
+                  className="text-4xl font-bold text-gray-800 mb-2"
+                  style={{ fontFamily: 'Noto Serif SC, serif' }}
+                >
+                  配置管理
+                </h1>
+                <p className="text-gray-600">管理网站的各项配置设置</p>
+              </div>
+              
+              <div className="flex items-center gap-4 mt-4 md:mt-0">
+                <Link
+                  to="/admin/articles"
+                  className="inline-flex items-center px-4 py-2 text-gray-600 hover:text-blue-600 transition-colors"
+                >
+                  <i className="fas fa-file-alt mr-2"></i>
+                  文章管理
+                </Link>
+                
+                <Link
+                  to="/admin/categories"
+                  className="inline-flex items-center px-4 py-2 text-gray-600 hover:text-blue-600 transition-colors"
+                >
+                  <i className="fas fa-folder mr-2"></i>
+                  分类管理
+                </Link>
+                
+                <Link
+                  to="/admin/analytics"
+                  className="inline-flex items-center px-4 py-2 text-gray-600 hover:text-blue-600 transition-colors"
+                >
+                  <i className="fas fa-chart-bar mr-2"></i>
+                  统计分析
+                </Link>
+              </div>
+            </div>
           </div>
+        </header>
+        
+        {/* Content */}
+        <div className="max-w-7xl mx-auto px-6">
+          <div className="bg-white rounded-lg shadow-sm">
+            {/* Header */}
+            <div className="border-b border-gray-200 px-6 py-4">
+              <div className="flex flex-col md:flex-row items-start md:items-center justify-between">
+                <div>
+                  <h2 className="text-xl font-bold text-gray-800">博客配置管理</h2>
+                  <p className="text-gray-600 mt-1">自定义您的博客个性化信息</p>
+                </div>
+                
+
+              </div>
+            </div>
 
           {/* Tabs */}
           <div className="border-b border-gray-200">
@@ -572,8 +628,11 @@ export default function ConfigManager() {
               </div>
             </div>
           </div>
+          </div>
         </div>
       </div>
+
+      <Footer />
     </div>
   );
 }

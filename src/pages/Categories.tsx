@@ -5,6 +5,7 @@ import Footer from '@/components/Footer';
 import SEOHead, { generateCategoryStructuredData } from '@/components/SEOHead';
 import useStore from '@/store/useStore';
 import { useConfig } from '@/contexts/ConfigContext';
+import { analytics } from '@/lib/analytics';
 
 export default function Categories() {
   const { categoryId } = useParams<{ categoryId?: string }>();
@@ -15,6 +16,9 @@ export default function Categories() {
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
   
   useEffect(() => {
+    // 跟踪页面访问
+    analytics.trackPageView(window.location.pathname, document.title);
+    
     const loadData = async () => {
       await fetchArticles();
       await fetchCategories();

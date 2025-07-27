@@ -471,14 +471,14 @@ export const migrationApi = {
     try {
       const existingData = localStorage.getItem('blog-store')
       if (!existingData) {
-        console.log('No existing data to migrate')
+  
         return
       }
       
       const { articles, categories } = JSON.parse(existingData)
       
       // 1. 迁移分类
-      console.log('Migrating categories...')
+
       const categoryMap = new Map()
       
       for (const category of categories) {
@@ -499,7 +499,7 @@ export const migrationApi = {
       }
       
       // 2. 迁移文章
-      console.log('Migrating articles...')
+
       for (const article of articles) {
         const categoryId = categoryMap.get(article.category)
         
@@ -517,7 +517,7 @@ export const migrationApi = {
           })
       }
       
-      console.log('Migration completed successfully')
+
       
       // 清除LocalStorage数据（可选）
       // localStorage.removeItem('blog-store')

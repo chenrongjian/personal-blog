@@ -16,6 +16,7 @@ import {
   particleFloatAnimation
 } from '@/utils/animations';
 import { useConfig } from '@/contexts/ConfigContext';
+import { analytics } from '@/lib/analytics';
 
 export default function Home() {
   const { articles, categories, fetchArticles, fetchCategories, loading } = useStore();
@@ -26,6 +27,12 @@ export default function Home() {
   const titleRef = useRef<HTMLHeadingElement>(null);
   const particlesRef = useRef<HTMLDivElement>(null);
   const typewriterCleanupRef = useRef<(() => void) | null>(null);
+
+  // 页面访问跟踪
+  useEffect(() => {
+    // 跟踪页面访问
+    analytics.trackPageView(window.location.pathname, document.title);
+  }, []);
 
   // 优化数据获取 - 并行加载
   useEffect(() => {
