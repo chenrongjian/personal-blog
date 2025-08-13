@@ -136,7 +136,7 @@ export const defaultSiteConfig: SiteConfig = {
   },
   
   footer: {
-    copyright: "© 2025 nobugcode.com. All rights reserved."
+    copyright: "© 2025 blog.nobugcode.com. All rights reserved."
   }
 };
 

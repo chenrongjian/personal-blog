@@ -1,6 +1,6 @@
 # 陈荣健的博客 - 个人博客系统
 
-🌐 **在线访问**: [https://nobugcode.com/](https://nobugcode.com/)
+🌐 **在线访问**: [https://blog.nobugcode.com/](https://blog.nobugcode.com/)
 
 一个基于 React + TypeScript + Vite 构建的现代化个人博客系统，采用 Supabase 作为后端服务，支持 Markdown 文章编写和管理。
 
@@ -188,7 +188,7 @@ MIT License
 
 ## 🔗 相关链接
 
-- [在线演示](https://nobugcode.com/)
+- [在线演示](https://blog.nobugcode.com/)
 - [Supabase 文档](https://supabase.com/docs)
 - [React 文档](https://react.dev/)
 - [Tailwind CSS 文档](https://tailwindcss.com/docs)

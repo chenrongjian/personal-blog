@@ -41,7 +41,7 @@ export default function Featured() {
           "@type": "CollectionPage",
           "name": "精彩文章",
           "description": "精选优质技术文章，涵盖前端开发、后端技术、编程思维等多个领域的深度内容",
-          "url": "https://nobugcode.com/featured",
+          "url": "https://blog.nobugcode.com/featured",
           "mainEntity": {
             "@type": "ItemList",
             "numberOfItems": featuredArticles.length,
@@ -52,7 +52,7 @@ export default function Featured() {
                 "@type": "Article",
                 "headline": article.title,
                 "description": article.excerpt,
-                "url": `https://nobugcode.com/article/${article.id}`,
+                "url": `https://blog.nobugcode.com/article/${article.id}`,
                 "datePublished": article.published_at,
                 "author": {
                   "@type": "Person",

@@ -73,18 +73,18 @@ export default function Categories() {
           : '浏览所有文章分类，发现感兴趣的技术内容和学习资源'
         }
         ogUrl={selectedCategory 
-          ? `https://nobugcode.com/categories/${selectedCategory.id}`
-          : 'https://nobugcode.com/categories'
+          ? `https://blog.nobugcode.com/categories/${selectedCategory.id}`
+          : 'https://blog.nobugcode.com/categories'
         }
         canonicalUrl={selectedCategory 
-          ? `https://nobugcode.com/categories/${selectedCategory.id}`
-          : 'https://nobugcode.com/categories'
+          ? `https://blog.nobugcode.com/categories/${selectedCategory.id}`
+          : 'https://blog.nobugcode.com/categories'
         }
         structuredData={selectedCategory 
           ? generateCategoryStructuredData({
               name: selectedCategory.name,
               description: selectedCategory.description,
-              url: `https://nobugcode.com/categories/${selectedCategory.id}`,
+              url: `https://blog.nobugcode.com/categories/${selectedCategory.id}`,
               articleCount: sortedArticles.length
             })
           : {
@@ -92,7 +92,7 @@ export default function Categories() {
               "@type": "CollectionPage",
               "name": "文章分类",
               "description": "浏览所有文章分类，发现感兴趣的技术内容和学习资源",
-              "url": "https://nobugcode.com/categories",
+              "url": "https://blog.nobugcode.com/categories",
               "mainEntity": {
                 "@type": "ItemList",
                 "numberOfItems": categories.length,
@@ -103,7 +103,7 @@ export default function Categories() {
                     "@type": "Thing",
                     "name": cat.name,
                     "description": cat.description,
-                    "url": `https://nobugcode.com/categories/${cat.id}`
+                    "url": `https://blog.nobugcode.com/categories/${cat.id}`
                   }
                 }))
               },

@@ -77,16 +77,16 @@ export default function ArticleDetail() {
           keywords={`${article.title},${category?.name || ''},技术博客,编程,学习笔记`}
           ogTitle={article.title}
           ogDescription={article.excerpt || `${article.content.substring(0, 160)}...`}
-          ogUrl={`https://nobugcode.com/article/${article.id}`}
+          ogUrl={`https://blog.nobugcode.com/article/${article.id}`}
           ogType="article"
-          canonicalUrl={`https://nobugcode.com/article/${article.id}`}
+          canonicalUrl={`https://blog.nobugcode.com/article/${article.id}`}
           structuredData={generateArticleStructuredData({
             title: article.title,
             content: article.content,
             author: article.author,
             published_at: article.published_at,
             category: category?.name,
-            url: `https://nobugcode.com/article/${article.id}`
+            url: `https://blog.nobugcode.com/article/${article.id}`
           })}
         />
       )}

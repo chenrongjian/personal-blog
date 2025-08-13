@@ -198,15 +198,15 @@ export default function Home() {
         keywords="个人博客,技术博客,编程,前端开发,React,TypeScript,JavaScript,技术分享,学习笔记"
         ogTitle={`${siteConfig.site.title} - ${siteConfig.site.subtitle}`}
         ogDescription={siteConfig.site.description}
-        ogUrl="https://nobugcode.com/"
+        ogUrl="https://blog.nobugcode.com/"
         ogType="website"
-        canonicalUrl="https://nobugcode.com/"
+        canonicalUrl="https://blog.nobugcode.com/"
         structuredData={{
           "@context": "https://schema.org",
           "@type": "Blog",
           "name": siteConfig.site.title,
           "description": siteConfig.site.description,
-          "url": "https://nobugcode.com/",
+          "url": "https://blog.nobugcode.com/",
           "author": {
             "@type": "Person",
             "name": siteConfig.author.name
@@ -219,7 +219,7 @@ export default function Home() {
           "blogPost": featuredArticles.map(article => ({
             "@type": "BlogPosting",
             "headline": article.title,
-            "url": `https://nobugcode.com/article/${article.id}`,
+            "url": `https://blog.nobugcode.com/article/${article.id}`,
             "datePublished": article.published_at,
             "author": {
               "@type": "Person",

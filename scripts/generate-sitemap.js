@@ -6,7 +6,7 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 // 网站基础URL
-const SITE_URL = 'https://nobugcode.com';
+const SITE_URL = 'https://blog.nobugcode.com';
 
 // 静态页面配置
 const staticPages = [
