@@ -42,7 +42,7 @@ export default function MarkdownRenderer({ content, className = '' }: MarkdownRe
   
   // 自定义链接渲染器，为外部链接添加rel属性
   renderer.link = function({ href, title, text }: { href: string; title?: string; text: string }) {
-    const isExternal = href.startsWith('http') && !href.includes('nobugcode.com');
+    const isExternal = href.startsWith('http') && !href.includes('blog.nobugcode.com');
     const titleAttr = title ? ` title="${title}"` : '';
     const relAttr = isExternal ? ' rel="noopener noreferrer"' : '';
     const targetAttr = isExternal ? ' target="_blank"' : '';
