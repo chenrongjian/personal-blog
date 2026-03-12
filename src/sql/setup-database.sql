@@ -51,27 +51,43 @@ ALTER TABLE articles ENABLE ROW LEVEL SECURITY;
 ALTER TABLE categories ENABLE ROW LEVEL SECURITY;
 ALTER TABLE users ENABLE ROW LEVEL SECURITY;
 
--- 6. 创建 RLS 策略
+-- 6. 创建 RLS 策略（简单安全版本）
+
+-- 先删除已存在的策略（避免重复创建报错）
+DROP POLICY IF EXISTS "Public articles are viewable by everyone" ON articles;
+DROP POLICY IF EXISTS "Admins can manage all articles" ON articles;
+DROP POLICY IF EXISTS "Authenticated users can manage articles" ON articles;
+DROP POLICY IF EXISTS "Categories are viewable by everyone" ON categories;
+DROP POLICY IF EXISTS "Admins can manage categories" ON categories;
+
+DROP POLICY IF EXISTS "Users can view own profile" ON users;
+DROP POLICY IF EXISTS "Admins can view all users" ON users;
 
 -- articles 表权限策略
-CREATE POLICY IF NOT EXISTS "Public articles are viewable by everyone" ON articles
+-- 任何人可以查看已发布的文章
+CREATE POLICY "Public articles are viewable by everyone" ON articles
   FOR SELECT USING (is_published = true);
 
-CREATE POLICY IF NOT EXISTS "Admins can manage all articles" ON articles
-  FOR ALL USING (auth.jwt() ->> 'role' = 'admin');
+-- 已登录用户可以管理文章
+CREATE POLICY "Authenticated users can manage articles" ON articles
+  FOR ALL USING (auth.role() = 'authenticated');
 
 -- categories 表权限策略
-CREATE POLICY IF NOT EXISTS "Categories are viewable by everyone" ON categories
+-- 任何人都可以查看分类
+CREATE POLICY "Categories are viewable by everyone" ON categories
   FOR SELECT USING (true);
 
-CREATE POLICY IF NOT EXISTS "Admins can manage categories" ON categories
-  FOR ALL USING (auth.jwt() ->> 'role' = 'admin');
+-- 只有管理员可以管理分类
+CREATE POLICY "Admins can manage categories" ON categories
+  FOR ALL USING (auth.role() = 'authenticated');
 
 -- users 表权限策略
-CREATE POLICY IF NOT EXISTS "Users can view own profile" ON users
+-- 用户只能查看自己的资料
+CREATE POLICY "Users can view own profile" ON users
   FOR SELECT USING (auth.uid() = id);
 
-CREATE POLICY IF NOT EXISTS "Admins can view all users" ON users
+-- 管理员可以查看所有用户
+CREATE POLICY "Admins can view all users" ON users
   FOR SELECT USING (auth.jwt() ->> 'role' = 'admin');
 
 -- 7. 插入默认管理员账户

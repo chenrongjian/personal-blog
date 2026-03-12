@@ -82,31 +82,23 @@ BEGIN
   INSERT INTO page_stats (page_url, page_title, total_visits, unique_visitors, total_duration, bounce_count, last_visit)
   VALUES (NEW.page_url, NEW.page_title, 1, 1, NEW.duration, CASE WHEN NEW.is_bounce THEN 1 ELSE 0 END, NEW.visit_time)
   ON CONFLICT (page_url) DO UPDATE SET
-    total_visits = page_stats.total_visits + 1,
-    unique_visitors = (
-      SELECT COUNT(DISTINCT visitor_id) 
-      FROM page_visits 
-      WHERE page_url = NEW.page_url
-    ),
-    total_duration = page_stats.total_duration + NEW.duration,
-    bounce_count = page_stats.bounce_count + CASE WHEN NEW.is_bounce THEN 1 ELSE 0 END,
-    last_visit = NEW.visit_time,
+    total_visits = EXCLUDED.total_visits,
+    unique_visitors = EXCLUDED.unique_visitors,
+    total_duration = EXCLUDED.total_duration,
+    bounce_count = EXCLUDED.bounce_count,
+    last_visit = EXCLUDED.last_visit,
     updated_at = NOW();
   
   -- 更新每日统计
   INSERT INTO daily_stats (date, total_visits, unique_visitors, total_duration)
   VALUES (DATE(NEW.visit_time), 1, 1, NEW.duration)
   ON CONFLICT (date) DO UPDATE SET
-    total_visits = daily_stats.total_visits + 1,
-    unique_visitors = (
-      SELECT COUNT(DISTINCT visitor_id) 
-      FROM page_visits 
-      WHERE DATE(visit_time) = DATE(NEW.visit_time)
-    ),
-    total_duration = daily_stats.total_duration + NEW.duration,
+    total_visits = EXCLUDED.total_visits,
+    unique_visitors = EXCLUDED.unique_visitors,
+    total_duration = EXCLUDED.total_duration,
     bounce_rate = (
       SELECT ROUND(
-        (COUNT(*) FILTER (WHERE is_bounce = true) * 100.0) / COUNT(*), 2
+        (COUNT(*) FILTER (WHERE is_bounce = true) * 100.0) / NULLIF(COUNT(*), 0), 2
       )
       FROM page_visits 
       WHERE DATE(visit_time) = DATE(NEW.visit_time)
@@ -160,11 +152,10 @@ CREATE POLICY "Allow authenticated full access to daily_stats" ON daily_stats
 CREATE POLICY "Allow authenticated full access to analytics_config" ON analytics_config
   FOR ALL TO authenticated USING (true) WITH CHECK (true);
 
--- 插入一些测试数据
+-- 插入一些测试数据（page_visits 没有唯一约束，移除 ON CONFLICT）
 INSERT INTO page_visits (page_url, page_title, visitor_id, session_id, visit_time, duration) VALUES
 ('/', '首页', 'visitor_1', 'session_1', NOW() - INTERVAL '1 day', 120),
 ('/', '首页', 'visitor_2', 'session_2', NOW() - INTERVAL '1 day', 90),
 ('/about', '关于我们', 'visitor_1', 'session_1', NOW() - INTERVAL '1 day', 60),
 ('/', '首页', 'visitor_3', 'session_3', NOW(), 150),
-('/categories', '分类', 'visitor_2', 'session_4', NOW(), 80)
-ON CONFLICT DO NOTHING;
+('/categories', '分类', 'visitor_2', 'session_4', NOW(), 80);
