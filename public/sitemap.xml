@@ -6,49 +6,49 @@
         xmlns:image="http://www.google.com/schemas/sitemap-image/1.1">
   <url>
     <loc>https://blog.nobugcode.com/</loc>
-    <lastmod>2026-03-12T07:01:01.700Z</lastmod>
+    <lastmod>2026-03-12T07:22:50.367Z</lastmod>
     <changefreq>daily</changefreq>
     <priority>1.0</priority>
     <mobile:mobile/>
   </url>
   <url>
     <loc>https://blog.nobugcode.com/categories</loc>
-    <lastmod>2026-03-12T07:01:01.701Z</lastmod>
+    <lastmod>2026-03-12T07:22:50.368Z</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
     <mobile:mobile/>
   </url>
   <url>
     <loc>https://blog.nobugcode.com/admin/login</loc>
-    <lastmod>2026-03-12T07:01:01.701Z</lastmod>
+    <lastmod>2026-03-12T07:22:50.368Z</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.3</priority>
     <mobile:mobile/>
   </url>
   <url>
     <loc>https://blog.nobugcode.com/article/example-1</loc>
-    <lastmod>2026-03-12T07:01:01.704Z</lastmod>
+    <lastmod>2026-03-12T07:22:50.372Z</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
     <mobile:mobile/>
   </url>
   <url>
     <loc>https://blog.nobugcode.com/article/example-2</loc>
-    <lastmod>2026-03-12T07:01:01.704Z</lastmod>
+    <lastmod>2026-03-12T07:22:50.372Z</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
     <mobile:mobile/>
   </url>
   <url>
     <loc>https://blog.nobugcode.com/categories/tech</loc>
-    <lastmod>2026-03-12T07:01:01.704Z</lastmod>
+    <lastmod>2026-03-12T07:22:50.372Z</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
     <mobile:mobile/>
   </url>
   <url>
     <loc>https://blog.nobugcode.com/categories/life</loc>
-    <lastmod>2026-03-12T07:01:01.704Z</lastmod>
+    <lastmod>2026-03-12T07:22:50.372Z</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
     <mobile:mobile/>

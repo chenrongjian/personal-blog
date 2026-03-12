@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useParams, Link, Navigate } from 'react-router-dom';
-import { ChevronUp, Clock, Calendar, Eye, ArrowLeft, ArrowRight } from 'lucide-react';
+import { ChevronUp, Clock, Calendar, ArrowLeft, ArrowRight } from 'lucide-react';
 import Navigation from '@/components/Navigation';
 import SEOHead, { generateArticleStructuredData } from '@/components/SEOHead';
 import ArticleViews from '@/components/ArticleViews';
