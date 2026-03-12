@@ -71,7 +71,7 @@ export default function About() {
                   </div>
                   <div className="flex items-center text-gray-700">
                     <Calendar className="mr-3 text-blue-600" size={20} />
-                    <span>建站时间：2025年</span>
+                    <span>建站时间：2026年</span>
                   </div>
                 </div>
                 
