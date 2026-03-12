@@ -39,7 +39,8 @@ export default function MarkdownRenderer({ content, className = '' }: MarkdownRe
       gfm: true,
     });
 
-    return marked.parse(content, { renderer }) as string;
+    const result = marked.parse(content, { renderer, async: false });
+    return result as string;
   }, [content]);
 
   return (
