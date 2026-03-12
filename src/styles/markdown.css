@@ -1,188 +1,361 @@
-/* Markdown Content Styles */
+/* Markdown Content Styles - 简洁优雅的博客风格 */
 .markdown-content {
-  @apply text-gray-700;
+  font-family: 'Noto Serif SC', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  font-size: 17px;
+  line-height: 1.85;
+  color: #2d3748;
 }
 
-/* 标题样式 */
+/* 标题样式 - 优雅的层次感 */
 .markdown-content h1 {
-  @apply text-3xl font-bold text-gray-800 mt-8 mb-6 pb-3 border-b border-gray-200;
-  font-family: 'Noto Serif SC', serif;
+  font-size: 2em;
+  font-weight: 700;
+  color: #1a202c;
+  margin: 1.5em 0 0.8em;
+  padding-bottom: 0.4em;
+  border-bottom: 2px solid #e2e8f0;
   line-height: 1.3;
+  letter-spacing: -0.02em;
 }
 
 .markdown-content h2 {
-  @apply text-2xl font-bold text-gray-800 mt-8 mb-5 pb-2 border-b border-gray-100;
-  font-family: 'Noto Serif SC', serif;
+  font-size: 1.5em;
+  font-weight: 600;
+  color: #1a202c;
+  margin: 1.4em 0 0.6em;
+  padding-bottom: 0.3em;
+  border-bottom: 1px solid #edf2f7;
   line-height: 1.4;
 }
 
 .markdown-content h3 {
-  @apply text-xl font-semibold text-gray-800 mt-6 mb-4;
-  font-family: 'Noto Serif SC', serif;
+  font-size: 1.25em;
+  font-weight: 600;
+  color: #2d3748;
+  margin: 1.2em 0 0.5em;
   line-height: 1.4;
 }
 
 .markdown-content h4 {
-  @apply text-lg font-semibold text-gray-800 mt-5 mb-3;
-  font-family: 'Noto Serif SC', serif;
+  font-size: 1.1em;
+  font-weight: 600;
+  color: #4a5568;
+  margin: 1em 0 0.4em;
 }
 
-.markdown-content h5 {
-  @apply text-base font-semibold text-gray-800 mt-4 mb-3;
-  font-family: 'Noto Serif SC', serif;
-}
-
+.markdown-content h5,
 .markdown-content h6 {
-  @apply text-sm font-semibold text-gray-700 mt-4 mb-2;
-  font-family: 'Noto Serif SC', serif;
+  font-size: 1em;
+  font-weight: 600;
+  color: #4a5568;
+  margin: 0.8em 0 0.3em;
 }
 
 /* 段落样式 */
 .markdown-content p {
-  @apply mb-4 leading-relaxed;
+  margin-bottom: 1.2em;
   text-align: justify;
+  text-justify: inter-ideograph;
+  word-break: break-word;
 }
 
 /* 链接样式 */
-.markdown-content a {
-  @apply text-blue-600 hover:text-blue-800 underline decoration-1 underline-offset-2;
+.markdown-content .markdown-link {
+  color: #3182ce;
+  text-decoration: none;
+  border-bottom: 1px solid transparent;
   transition: all 0.2s ease;
+  padding-bottom: 1px;
 }
 
-.markdown-content a:hover {
-  @apply decoration-2;
+.markdown-content .markdown-link:hover {
+  color: #2c5282;
+  border-bottom-color: #3182ce;
 }
 
 /* 强调样式 */
 .markdown-content strong {
-  @apply font-semibold text-gray-800;
+  font-weight: 600;
+  color: #1a202c;
 }
 
 .markdown-content em {
-  @apply italic text-gray-700;
+  font-style: italic;
+  color: #4a5568;
 }
 
 /* 列表样式 */
-.markdown-content ul {
-  @apply mb-4 pl-6;
-}
-
+.markdown-content ul,
 .markdown-content ol {
-  @apply mb-4 pl-6;
+  margin-bottom: 1.2em;
+  padding-left: 1.5em;
 }
 
 .markdown-content li {
-  @apply mb-2 leading-relaxed;
+  margin-bottom: 0.5em;
+  line-height: 1.7;
 }
 
 .markdown-content ul li {
-  @apply relative;
+  list-style: none;
+  position: relative;
+  padding-left: 1.2em;
 }
 
 .markdown-content ul li::before {
   content: '•';
-  @apply absolute -left-4 text-gray-400 font-bold;
+  position: absolute;
+  left: 0;
+  color: #718096;
+  font-weight: bold;
 }
 
 .markdown-content ol li {
-  @apply list-decimal;
+  list-style: decimal;
+  color: #4a5568;
 }
 
-/* 引用样式 */
+.markdown-content ol li::marker {
+  color: #718096;
+  font-weight: 600;
+}
+
+/* 引用样式 - 优雅的设计 */
 .markdown-content blockquote {
-  @apply border-l-4 border-blue-200 bg-blue-50 pl-6 pr-4 py-4 mb-6 italic;
+  margin: 1.5em 0;
+  padding: 1em 1.5em;
+  background: linear-gradient(to right, #f7fafc, #edf2f7);
+  border-left: 4px solid #4299e1;
   border-radius: 0 8px 8px 0;
+  position: relative;
+}
+
+.markdown-content blockquote::before {
+  content: '"';
+  position: absolute;
+  top: -10px;
+  left: 15px;
+  font-size: 4em;
+  color: #cbd5e0;
+  font-family: Georgia, serif;
+  line-height: 1;
 }
 
 .markdown-content blockquote p {
-  @apply mb-2 text-gray-700;
+  margin: 0;
+  color: #4a5568;
+  font-style: italic;
+  line-height: 1.7;
 }
 
-.markdown-content blockquote p:last-child {
-  @apply mb-0;
+.markdown-content blockquote p + p {
+  margin-top: 0.8em;
 }
 
-/* 代码样式 */
+/* 代码样式 - 现代暗色主题 */
 .markdown-content code {
-  @apply bg-gray-100 text-gray-800 px-2 py-1 rounded text-sm;
-  font-family: 'Fira Code', 'Monaco', 'Consolas', monospace;
+  font-family: 'JetBrains Mono', 'Fira Code', 'SF Mono', Consolas, monospace;
+  font-size: 0.875em;
+  background: #edf2f7;
+  color: #e53e3e;
+  padding: 0.2em 0.4em;
+  border-radius: 4px;
+  font-weight: 500;
 }
 
 .markdown-content pre {
-  @apply bg-gray-900 text-gray-100 p-6 rounded-lg mb-6 overflow-x-auto;
-  font-family: 'Fira Code', 'Monaco', 'Consolas', monospace;
-  line-height: 1.5;
+  margin: 1.5em 0;
+  padding: 1.25em;
+  background: #1a202c;
+  border-radius: 12px;
+  overflow-x: auto;
+  position: relative;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
 }
 
 .markdown-content pre code {
-  @apply bg-transparent text-inherit p-0;
-  font-size: 14px;
+  background: transparent;
+  color: #e2e8f0;
+  padding: 0;
+  font-size: 0.875em;
+  line-height: 1.6;
 }
 
-/* 表格样式 */
+/* 代码高亮优化 */
+.markdown-content .hljs {
+  background: transparent !important;
+  padding: 0 !important;
+}
+
+.markdown-content .hljs-keyword,
+.markdown-content .hljs-selector-tag,
+.markdown-content .hljs-title,
+.markdown-content .hljs-section,
+.markdown-content .hljs-doctag,
+.markdown-content .hljs-name,
+.markdown-content .hljs-strong {
+  color: #c678dd;
+}
+
+.markdown-content .hljs-string,
+.markdown-content .hljs-title.class_,
+.markdown-content .hljs-title.class_.inherited__,
+.markdown-content .hljs-title.function_ {
+  color: #98c379;
+}
+
+.markdown-content .hljs-number,
+.markdown-content .hljs-literal,
+.markdown-content .hljs-variable,
+.markdown-content .hljs-template-variable,
+.markdown-content .hljs-tag .hljs-attr {
+  color: #d19a66;
+}
+
+.markdown-content .hljs-comment,
+.markdown-content .hljs-quote,
+.markdown-content .hljs-deletion,
+.markdown-content .hljs-meta {
+  color: #5c6370;
+  font-style: italic;
+}
+
+.markdown-content .hljs-attr,
+.markdown-content .hljs-attribute {
+  color: #e5c07b;
+}
+
+.markdown-content .hljs-built_in,
+.markdown-content .hljs-type {
+  color: #e6c07b;
+}
+
+/* 表格样式 - 优雅简洁 */
 .markdown-content table {
-  @apply w-full border-collapse mb-6 bg-white rounded-lg overflow-hidden shadow-sm;
+  width: 100%;
+  margin: 1.5em 0;
+  border-collapse: separate;
+  border-spacing: 0;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
 }
 
 .markdown-content th {
-  @apply bg-gray-50 text-gray-800 font-semibold p-3 text-left border-b border-gray-200;
+  background: #f7fafc;
+  color: #2d3748;
+  font-weight: 600;
+  text-align: left;
+  padding: 0.875em 1em;
+  border-bottom: 2px solid #e2e8f0;
 }
 
 .markdown-content td {
-  @apply p-3 border-b border-gray-100;
+  padding: 0.75em 1em;
+  border-bottom: 1px solid #edf2f7;
+  color: #4a5568;
 }
 
-.markdown-content tr:hover {
-  @apply bg-gray-50;
+.markdown-content tr:last-child td {
+  border-bottom: none;
 }
 
-/* 分割线样式 */
+.markdown-content tr:hover td {
+  background: #fafbfc;
+}
+
+/* 分割线 */
 .markdown-content hr {
-  @apply border-0 border-t border-gray-200 my-8;
+  border: none;
+  height: 1px;
+  background: linear-gradient(to right, transparent, #e2e8f0, transparent);
+  margin: 2.5em 0;
 }
 
-/* 图片样式 */
-.markdown-content img {
-  @apply max-w-full h-auto rounded-lg shadow-sm mb-4;
+/* 图片样式 - 优雅的展示 */
+.markdown-content .markdown-img {
+  display: block;
+  max-width: 100%;
+  height: auto;
+  margin: 1.5em auto;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
 }
 
-/* 代码高亮覆盖样式 */
-.markdown-content .hljs {
-  background: #1f2937 !important;
-  color: #f9fafb !important;
-  padding: 1.5rem !important;
-  border-radius: 0.5rem !important;
-  font-size: 14px !important;
-  line-height: 1.5 !important;
+.markdown-content .markdown-img:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.12);
+}
+
+/* 任务列表 */
+.markdown-content input[type="checkbox"] {
+  margin-right: 0.5em;
+  accent-color: #4299e1;
+}
+
+/* 首字下沉效果 */
+.markdown-content > p:first-of-type::first-letter {
+  float: left;
+  font-size: 3.5em;
+  line-height: 0.8;
+  font-weight: 700;
+  color: #2b6cb0;
+  margin-right: 0.15em;
+  margin-top: 0.05em;
+  font-family: 'Noto Serif SC', serif;
 }
 
 /* 响应式调整 */
 @media (max-width: 768px) {
+  .markdown-content {
+    font-size: 16px;
+    line-height: 1.8;
+  }
+
   .markdown-content h1 {
-    @apply text-2xl;
+    font-size: 1.5em;
   }
-  
+
   .markdown-content h2 {
-    @apply text-xl;
+    font-size: 1.25em;
   }
-  
+
   .markdown-content h3 {
-    @apply text-lg;
+    font-size: 1.1em;
   }
-  
+
   .markdown-content pre {
-    @apply p-4;
+    padding: 1em;
+    border-radius: 8px;
+    font-size: 0.8125em;
   }
-  
-  .markdown-content .hljs {
-    padding: 1rem !important;
-    font-size: 13px !important;
+
+  .markdown-content table {
+    font-size: 0.875em;
+  }
+
+  .markdown-content blockquote {
+    padding: 0.75em 1em;
+    margin: 1em 0;
+  }
+
+  .markdown-content blockquote::before {
+    font-size: 3em;
+    top: -5px;
+    left: 10px;
+  }
+
+  .markdown-content > p:first-of-type::first-letter {
+    font-size: 2.5em;
   }
 }
 
-/* 首字母大写效果（可选） */
-.markdown-content .first-letter::first-letter {
-  @apply float-left text-6xl font-bold text-gray-800 mr-2 mt-1;
-  font-family: 'Noto Serif SC', serif;
-  line-height: 0.8;
+/* 打印样式 */
+@media print {
+  .markdown-content pre,
+  .markdown-content blockquote {
+    box-shadow: none;
+    border: 1px solid #e2e8f0;
+  }
 }

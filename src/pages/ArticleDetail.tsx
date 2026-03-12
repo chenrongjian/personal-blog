@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useParams, Link, Navigate } from 'react-router-dom';
-import { ChevronUp } from 'lucide-react';
+import { ChevronUp, Clock, Calendar, Eye, ArrowLeft, ArrowRight } from 'lucide-react';
 import Navigation from '@/components/Navigation';
 import SEOHead, { generateArticleStructuredData } from '@/components/SEOHead';
 import ArticleViews from '@/components/ArticleViews';
@@ -19,7 +19,6 @@ export default function ArticleDetail() {
   const [article, setArticle] = useState<Article | null>(null);
   
   useEffect(() => {
-    // 跟踪页面访问
     analytics.trackPageView(window.location.pathname, document.title);
     
     const loadArticle = async () => {
@@ -28,8 +27,6 @@ export default function ArticleDetail() {
         const fetchedArticle = await fetchArticleById(id);
         if (fetchedArticle) {
           setArticle(fetchedArticle);
-          // 阅读量增加逻辑移到 ArticleViews 组件中处理
-          // 这样可以利用 sessionStorage 防重复机制
         }
         setArticleLoading(false);
       }
@@ -39,37 +36,33 @@ export default function ArticleDetail() {
     loadArticle();
   }, [id, fetchArticleById]);
   
-  // 显示加载状态
   if (articleLoading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen bg-stone-50 flex items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">加载中...</p>
+          <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-stone-600 mx-auto mb-4"></div>
+          <p className="text-stone-500">加载中...</p>
         </div>
       </div>
     );
   }
   
-  // 文章不存在时重定向
   if (!articleLoading && !article) {
     return <Navigate to="/" replace />;
   }
   
   const category = article?.categories || categories.find(cat => cat.id === article?.category_id);
   
-  // 获取相关文章（同分类的其他文章）
   const relatedArticles = articles
     .filter(a => a.category_id === article?.category_id && a.id !== article?.id && a.is_published)
     .slice(0, 3);
   
-  // 获取上一篇和下一篇文章
   const currentIndex = articles.findIndex(a => a.id === article.id);
   const prevArticle = currentIndex > 0 ? articles[currentIndex - 1] : null;
   const nextArticle = currentIndex < articles.length - 1 ? articles[currentIndex + 1] : null;
   
   return (
-    <main className="min-h-screen bg-gray-50">
+    <main className="min-h-screen bg-stone-50">
       {article && (
         <SEOHead
           title={`${article.title} | 思维的碎片`}
@@ -92,58 +85,59 @@ export default function ArticleDetail() {
       )}
       <Navigation />
       
-      <article className="pt-24 pb-16">
-        {/* Article Header */}
-        <header className="max-w-4xl mx-auto px-6 mb-12" role="banner">
-          <div className={`transform transition-all duration-1000 ${
-            isLoaded ? 'translate-y-0 opacity-100' : 'translate-y-10 opacity-0'
+      <article className="pt-20 pb-16">
+        <header className="max-w-3xl mx-auto px-6 mb-12">
+          <div className={`transform transition-all duration-700 ${
+            isLoaded ? 'translate-y-0 opacity-100' : 'translate-y-8 opacity-0'
           }`}>
-            {/* Breadcrumb */}
-            <nav className="flex items-center text-sm text-gray-500 mb-8">
-              <Link to="/" className="hover:text-blue-600 transition-colors">
-                <i className="fas fa-home mr-2"></i>
+            <nav className="flex items-center text-sm text-stone-400 mb-6">
+              <Link to="/" className="hover:text-stone-600 transition-colors flex items-center gap-1">
+                <ArrowLeft className="w-4 h-4" />
                 首页
               </Link>
-              <i className="fas fa-chevron-right mx-3"></i>
+              <span className="mx-2">/</span>
               <Link 
                 to={`/categories/${(category as Category)?.id || ''}`} 
-                className="hover:text-blue-600 transition-colors"
+                className="hover:text-stone-600 transition-colors"
               >
                 {category?.name}
               </Link>
-              <i className="fas fa-chevron-right mx-3"></i>
-              <span className="text-gray-700">文章详情</span>
             </nav>
             
-            {/* Category Badge */}
             <div className="mb-6">
-              <span className="inline-block px-4 py-2 bg-blue-100 text-blue-600 font-medium rounded-full">
+              <span 
+                className="inline-block px-3 py-1 text-sm font-medium rounded-full"
+                style={{ 
+                  backgroundColor: `${category?.color || '#78716c'}15`,
+                  color: category?.color || '#78716c'
+                }}
+              >
                 {category?.name}
               </span>
             </div>
             
-            {/* Title */}
             <h1 
-              className="text-4xl md:text-5xl font-bold text-gray-800 mb-6 leading-tight"
+              className="text-3xl md:text-4xl font-bold text-stone-800 mb-6 leading-tight"
               style={{ fontFamily: 'Noto Serif SC, serif' }}
             >
               {article.title}
             </h1>
             
-            {/* Meta Info */}
-            <div className="flex flex-wrap items-center gap-6 text-gray-600">
-              <div className="flex items-center">
-                <i className="fas fa-user mr-2"></i>
+            <div className="flex flex-wrap items-center gap-4 text-stone-500 text-sm">
+              <div className="flex items-center gap-1.5">
+                <div className="w-6 h-6 rounded-full bg-stone-200 flex items-center justify-center text-xs font-medium text-stone-600">
+                  {article.author?.charAt(0) || 'A'}
+                </div>
                 <span>{article.author}</span>
               </div>
               
-              <div className="flex items-center">
-                <i className="fas fa-calendar mr-2"></i>
-                <span>{new Date(article.published_at).toLocaleDateString('zh-CN')}</span>
+              <div className="flex items-center gap-1.5">
+                <Calendar className="w-4 h-4" />
+                <span>{new Date(article.published_at).toLocaleDateString('zh-CN', { year: 'numeric', month: 'long', day: 'numeric' })}</span>
               </div>
               
-              <div className="flex items-center">
-                <i className="fas fa-clock mr-2"></i>
+              <div className="flex items-center gap-1.5">
+                <Clock className="w-4 h-4" />
                 <span>{article.read_time} 分钟阅读</span>
               </div>
               
@@ -151,16 +145,15 @@ export default function ArticleDetail() {
                 articleId={article.id} 
                 title={article.title}
                 initialViews={article.view_count || 0}
-                className="flex items-center"
+                className="flex items-center gap-1.5"
               />
             </div>
           </div>
         </header>
         
-        {/* Article Content */}
-        <section className="max-w-4xl mx-auto px-6">
-          <div className={`bg-white rounded-xl shadow-sm p-8 md:p-12 transform transition-all duration-1000 delay-300 ${
-            isLoaded ? 'translate-y-0 opacity-100' : 'translate-y-10 opacity-0'
+        <section className="max-w-3xl mx-auto px-6">
+          <div className={`bg-white rounded-2xl shadow-sm border border-stone-100 p-8 md:p-12 transform transition-all duration-700 delay-200 ${
+            isLoaded ? 'translate-y-0 opacity-100' : 'translate-y-8 opacity-0'
           }`}>
             <MarkdownRenderer 
               content={article.content}
@@ -169,19 +162,18 @@ export default function ArticleDetail() {
           </div>
         </section>
         
-        {/* Navigation */}
-        <nav className="max-w-4xl mx-auto px-6 mt-12" aria-label="文章导航">
-          <div className="flex flex-col md:flex-row gap-4">
+        <nav className="max-w-3xl mx-auto px-6 mt-10">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {prevArticle && (
               <Link
                 to={`/article/${prevArticle.id}`}
-                className="flex-1 p-6 bg-white rounded-xl shadow-sm hover:shadow-md transition-all duration-300 group"
+                className="group p-5 bg-white rounded-xl shadow-sm border border-stone-100 hover:shadow-md hover:border-stone-200 transition-all duration-300"
               >
-                <div className="flex items-center">
-                  <i className="fas fa-chevron-left text-blue-600 mr-3 group-hover:-translate-x-1 transition-transform"></i>
+                <div className="flex items-center gap-3">
+                  <ArrowLeft className="w-4 h-4 text-stone-400 group-hover:-translate-x-1 transition-transform" />
                   <div>
-                    <p className="text-sm text-gray-500 mb-1">上一篇</p>
-                    <h3 className="font-semibold text-gray-800 group-hover:text-blue-600 transition-colors">
+                    <p className="text-xs text-stone-400 mb-0.5">上一篇</p>
+                    <h3 className="font-medium text-stone-700 group-hover:text-stone-900 transition-colors line-clamp-1">
                       {prevArticle.title}
                     </h3>
                   </div>
@@ -192,63 +184,55 @@ export default function ArticleDetail() {
             {nextArticle && (
               <Link
                 to={`/article/${nextArticle.id}`}
-                className="flex-1 p-6 bg-white rounded-xl shadow-sm hover:shadow-md transition-all duration-300 group text-right"
+                className="group p-5 bg-white rounded-xl shadow-sm border border-stone-100 hover:shadow-md hover:border-stone-200 transition-all duration-300 md:col-start-2"
               >
-                <div className="flex items-center justify-end">
-                  <div>
-                    <p className="text-sm text-gray-500 mb-1">下一篇</p>
-                    <h3 className="font-semibold text-gray-800 group-hover:text-blue-600 transition-colors">
+                <div className="flex items-center justify-end gap-3">
+                  <div className="text-right">
+                    <p className="text-xs text-stone-400 mb-0.5">下一篇</p>
+                    <h3 className="font-medium text-stone-700 group-hover:text-stone-900 transition-colors line-clamp-1">
                       {nextArticle.title}
                     </h3>
                   </div>
-                  <i className="fas fa-chevron-right text-blue-600 ml-3 group-hover:translate-x-1 transition-transform"></i>
+                  <ArrowRight className="w-4 h-4 text-stone-400 group-hover:translate-x-1 transition-transform" />
                 </div>
               </Link>
             )}
           </div>
         </nav>
         
-        {/* Related Articles */}
         {relatedArticles.length > 0 && (
-          <section className="max-w-4xl mx-auto px-6 mt-16" aria-labelledby="related-articles-title">
+          <section className="max-w-3xl mx-auto px-6 mt-16">
             <h2 
-              id="related-articles-title"
-              className="text-3xl font-bold text-gray-800 mb-8"
+              className="text-xl font-bold text-stone-800 mb-6"
               style={{ fontFamily: 'Noto Serif SC, serif' }}
             >
               相关文章
             </h2>
             
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               {relatedArticles.map((relatedArticle, index) => (
                 <Link
                   key={relatedArticle.id}
                   to={`/article/${relatedArticle.id}`}
-                  className={`block p-6 bg-white rounded-xl shadow-sm hover:shadow-md transition-all duration-300 transform hover:-translate-y-1 ${
-                    isLoaded ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'
+                  className={`block p-5 bg-white rounded-xl shadow-sm border border-stone-100 hover:shadow-md hover:border-stone-200 transition-all duration-300 ${
+                    isLoaded ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'
                   }`}
-                  style={{ 
-                    transitionDelay: `${(index + 1) * 200}ms` 
-                  }}
+                  style={{ transitionDelay: `${index * 100}ms` }}
                 >
                   <h3 
-                    className="font-semibold text-gray-800 mb-2 hover:text-blue-600 transition-colors"
+                    className="font-medium text-stone-700 mb-2 line-clamp-2"
                     style={{ fontFamily: 'Noto Serif SC, serif' }}
                   >
                     {relatedArticle.title}
                   </h3>
                   
-                  <p className="text-gray-600 text-sm mb-3 line-clamp-2">
-                    {relatedArticle.excerpt}
-                  </p>
-                  
-                  <div className="flex items-center justify-between text-xs text-gray-500">
-                    <span>
-                      <i className="fas fa-calendar mr-1"></i>
-                      {new Date(relatedArticle.published_at).toLocaleDateString('zh-CN')}
+                  <div className="flex items-center gap-3 text-xs text-stone-400">
+                    <span className="flex items-center gap-1">
+                      <Calendar className="w-3 h-3" />
+                      {new Date(relatedArticle.published_at).toLocaleDateString('zh-CN', { month: 'short', day: 'numeric' })}
                     </span>
-                    <span>
-                      <i className="fas fa-clock mr-1"></i>
+                    <span className="flex items-center gap-1">
+                      <Clock className="w-3 h-3" />
                       {relatedArticle.read_time} 分钟
                     </span>
                   </div>
@@ -259,13 +243,12 @@ export default function ArticleDetail() {
         )}
       </article>
       
-      {/* Back to Top Button */}
       <button
         onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
-        className="fixed bottom-8 right-8 z-50 bg-white/90 backdrop-blur-sm hover:bg-white border border-gray-200 hover:border-gray-300 text-gray-700 hover:text-gray-900 p-3 rounded-full shadow-lg hover:shadow-xl transition-all duration-300 group"
+        className="fixed bottom-6 right-6 z-50 bg-white/90 backdrop-blur-sm hover:bg-white border border-stone-200 hover:border-stone-300 text-stone-500 hover:text-stone-700 p-2.5 rounded-full shadow-lg hover:shadow-xl transition-all duration-300"
         aria-label="回到顶部"
       >
-        <ChevronUp className="w-5 h-5 group-hover:animate-bounce" />
+        <ChevronUp className="w-5 h-5" />
       </button>
     </main>
   );
